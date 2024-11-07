@@ -1,0 +1,19 @@
+{
+  "name": "sole-haven",
+  "version": "1.0.0",
+  "description": "Shoe Store - eCommerce Website An online platform for browsing, selecting, and purchasing a variety of shoes. This project provides a streamlined shopping experience with features for product browsing, detailed shoe descriptions, and a secure checkout process.",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.8.0",
+    "nodemon": "^3.1.7",
+    "sole-haven": "file:"
+  }
+}
