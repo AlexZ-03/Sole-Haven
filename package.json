@@ -6,10 +6,11 @@
   "scripts": {
     "start": "nodemon app"
   },
-  "author": "",
+  "author": "Alex Varghese",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
     "express": "^4.21.1",
     "mongodb": "^6.10.0",
     "mongoose": "^8.8.0",
