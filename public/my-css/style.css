@@ -42,3 +42,8 @@
 .login-option p {
     margin: 5px 0;
 }
+.error-message{
+    font-size: 0.75rem;
+    color: lightcoral;
+    display: none;
+}
