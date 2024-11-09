@@ -7,7 +7,8 @@ router.get('/pageNotFound',userController.pageNotFound);
 router.get('/',userController.loadHomePage);
 router.get('/signup',userController.signUpPage);
 router.post('/signup', userController.signUp);
-
+router.post('/verify-otp', userController.verifyOtp);
+router.post('/resend-otp', userController.resendOtp);
 
 
 
