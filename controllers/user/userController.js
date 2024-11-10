@@ -126,15 +126,12 @@ const verifyOtp = async (req, res) => {
             await saveUserData.save();
             req.session.user = saveUserData._id;
 
-            // Send a single response on successful OTP verification
             return res.json({ success: true, redirectUrl: "/" });
         } else {
-            // Send a single response if OTP is invalid
             return res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
         }
     } catch (error) {
         console.error("Error verifying OTP:", error);
-        // Send a single error response for unexpected errors
         return res.status(500).json({ success: false, message: "An error has occurred" });
     }
 }
@@ -162,6 +159,26 @@ const resendOtp = async (req, res) => {
     }
 }
 
+const loginPage = async (req, res) => {
+    try {
+        if(!req.session.user){
+            return res.render('login');
+        } else {
+            res.redirect('/');
+        }
+    } catch (error) {
+        res.redirect('/pageNotFound');
+    }
+}
+
+const login = async (req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+
 module.exports = {
     loadHomePage,
     pageNotFound,
@@ -169,5 +186,7 @@ module.exports = {
     signUp,
     verifyOtp,
     resendOtp,
+    loginPage,
+    login,
     
 }
