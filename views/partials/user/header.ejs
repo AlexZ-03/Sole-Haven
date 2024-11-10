@@ -26,6 +26,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="assets/imgs/theme/favicon.svg">
     <!-- Template CSS -->
     <link rel="stylesheet" href="assets/css/main.css?v=3.4">
+    <link rel="stylesheet" href="user/headerStyle.css" type="text/css">
 </head>
 
 <body>
@@ -64,12 +65,22 @@
                 </div>
                 <div class="col-lg-3 col-md-3">
                     <div class="header__nav__option">
-                        <a href="/signup" class="sign-up-link">Sign Up</a>
-                        <a href="/login" class="log-in-link">Log In</a> 
+                        <% if (locals.user) { %> 
+                            <div class="dropdown">
+                                <a href="#" class="sign-in-link"><%= user.name %></a>
+                                <div class="dropdown-content">
+                                    <a href="/userProfile">Profile</a>
+                                    <a href="/logout">Logout</a>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <a href="/signup" class="sign-up-link">Sign Up</a>
+                            <a href="/login" class="log-in-link">Log In</a> 
+                        <% } %>
                         <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
                         <a href="#"><img src="img/icon/heart.png" alt=""></a>
                         <a href="#"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
-                    </div>
+                    </div>                    
                 </div>
             </div>
             <div class="canvas__open"><i class="fa fa-bars"></i></div>

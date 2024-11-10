@@ -14,7 +14,13 @@ const pageNotFound = async (req, res) => {
 
 const loadHomePage = async (req, res) => {
     try {
-        return res.render('home');
+        const userId = req.session.user;
+        if(userId) {
+            const userData = await User.findOne({_id: userId});
+            res.render('home', {user:userData});
+        } else {
+            res.render('home');
+        }
     } catch (error) {
         console.log('Home page not found');
         res.status(500).send('Server error');
@@ -173,11 +179,48 @@ const loginPage = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        
+        const {email, password} = req.body;
+
+        const findUser = await User.findOne({email: email});
+
+        if(!findUser){
+            res.render('login', {message: "User not found"});
+        }
+        if(findUser.isBlocked){
+            res.render('login', {message: "User is blocked by admin"});
+        }
+
+        const passwordMatch = await bcrypt.compare(password, findUser.password);
+
+        if(!passwordMatch) {
+            return res.render('login', {message: "Incorrect Password"});
+        }
+
+        req.session.user = findUser._id;
+        res.redirect('/');
     } catch (error) {
-        
+        console.error('Login error occured', error);
+        res.render('login', {message: "login Failed"});
     }
 }
+
+
+const logout = async (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if(err){
+                console.log("Error while logout :", err.message);
+                return res.redirect('/pageNotFound');
+            }
+
+            return res.redirect('/login')
+        })
+    } catch (error) {
+        console.log('Logout Error',error.message);
+        res.redirect('/pageNotFound');
+    }
+}
+
 
 module.exports = {
     loadHomePage,
@@ -188,5 +231,7 @@ module.exports = {
     resendOtp,
     loginPage,
     login,
+    logout,
+    
     
 }

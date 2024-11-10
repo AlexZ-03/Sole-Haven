@@ -1,0 +1,50 @@
+/* Dropdown container */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Sign-in link */
+.dropdown .sign-in-link {
+    color: #000000;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px;
+}
+
+/* Dropdown content */
+.dropdown .dropdown-content {
+    display: none; /* Hidden by default */
+    position: absolute;
+    background-color: #f8f9fa;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    padding: 5px 0;
+    z-index: 1;
+}
+
+/* Individual dropdown links */
+.dropdown .dropdown-content a {
+    color: #333;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+    border-radius: 3px;
+}
+
+/* Hover effect on dropdown links */
+.dropdown .dropdown-content a:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* Show dropdown on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.header {
+    position: relative;
+    z-index: 500;
+}

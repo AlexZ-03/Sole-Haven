@@ -18,22 +18,20 @@ router.get('/auth/google/callback', passport.authenticate('google', {failureRedi
 router.get('/login', userController.loginPage);
 router.post('/login', userController.login);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //home route
 router.get('/',userController.loadHomePage);
+router.get('/logout', userController.logout);
+
+
+
+
+
+
+
+
+
+
+
 
 //pageNotFound
 router.get('/pageNotFound',userController.pageNotFound);
