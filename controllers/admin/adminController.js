@@ -15,7 +15,7 @@ const pageNotFound = async (req, res) => {
 
 const loadLogin = async (req, res) => {
         if(req.session.admin){
-            return res.redirect("/admin/dashboard")
+            return res.redirect("/admin")
         }
         res.render("admin-login.ejs", {message: null})
 }
@@ -34,7 +34,7 @@ const login = async (req, res) => {
                 return res.redirect('/admin/login');
             }
         } else {
-            return res.redirect("/login")
+            return res.redirect("/admin/login")
         }
     } catch (error) {
         console.log("login error", error);
