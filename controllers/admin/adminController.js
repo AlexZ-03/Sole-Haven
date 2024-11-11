@@ -26,12 +26,12 @@ const login = async (req, res) => {
         const admin = await User.findOne({email, isAdmin: true});
 
         if(admin) {
-            const passwordMatch = bcrypt.compare(password, admin.password);
+            const passwordMatch = await bcrypt.compare(password, admin.password);
             if(passwordMatch) {
                 req.session.admin = true;
                 return res.redirect('/admin');
             } else{
-                return res.redirect('/login');
+                return res.redirect('/admin/login');
             }
         } else {
             return res.redirect("/login")
@@ -53,6 +53,22 @@ const loadDashboard = async (req, res) => {
 }
 
 
+const logout = async (req, res) => {
+    try {
+        req.session.destroy(err => {
+            if(err) {
+                console.log('Error while destroying session'. err);
+                return res.redirect("/pageNotFound");
+            }
+            console.log('admin logged out');
+            res.redirect('/admin/login')
+        })
+    } catch (error) {
+        console.log("Unexpected error during logout", error);
+        res.redirect('pageNotFound');
+    }
+}
+
 
 
 
@@ -68,4 +84,5 @@ module.exports = {
     login,
     loadDashboard,
     pageNotFound,
+    logout,
 }
