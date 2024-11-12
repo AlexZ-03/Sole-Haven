@@ -126,14 +126,22 @@
                     <td class="text-start"><%= category.name %></td>
                     <td class="text-start"><%= category.description %></td>
                     <td>
+                      <% if(category.categoryOffer){%>
+                        <%=category.categoryOffer%>
+                        <% }else { %>
+                          0%
+                        <% } %>
                     </td>
                     <td class="text-start">
-                      <button class="btn btn-info" style="width: 100px">
-                        <a href="#" class="text-white">Add Offer</a>
+                      <% if(category.categoryOffer===0){ %>
+                      <button class="btn btn-info" style="width: 100px">  
+                        <a href="#" class="text-white" onclick="addOffer('<%=category._id%>')">Add Offer</a>
                       </button>
+                      <% } else{ %>
                       <button class="btn btn-info"style="width: 100px">
-                        <a href="#" class="text-white">Remove</a>
+                        <a href="#" class="text-white" onclick="removeOffer('<%=category._id%>')">Remove</a>
                       </button>
+                      <% } %>
                     </td>
                     <td class="text-start">
                       <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
@@ -267,6 +275,91 @@
             element.innerText = "";
             element.style.display = "none";
         })
+     }
+
+     async function addOffer(categoryId){
+      const {value: amount} = await Swal.fire({
+        title: "Offer in percentage",
+        input: "number",
+        inputLabel: "Percentage",
+        inputPlaceholder: "%"
+      });
+
+      if(amount){
+        try {
+          const response = await fetch("/admin/addCategoryOffer", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+            },
+            body:JSON.stringify({
+              percentage: amount,
+              categoryId: categoryId,
+            }),
+          });
+
+          const data = await response.json();
+          if(response.ok && data.status === true){
+            Swal.fire(
+              "Offer added",
+              "The offer has been added",
+              "success"
+            ).then( ()=> {
+              location.reload();
+            })
+          } else {
+            Swal.fire(
+              "Failed",
+              data.message ||
+              "Adding Offer failed",
+              "error"
+            )
+          }
+        } catch (error) {
+          console.error("Error while adding offer:", error.message, error.stack);
+          Swal.fire(
+            "Error",
+            "An error has occurred while adding the offer",
+            "error"
+          );
+          console.log("Error while adding offer",error);
+        }
+      }
+     }
+
+     async function removeOffer(categoryId){
+      try {
+        const response = await fetch('/admin/removeCategoryOffer', {
+          method: "POST",
+          headers: {
+            "content-type" : "application/json"
+          },
+          body: JSON.stringify({
+            categoryId: categoryId,
+          })
+        })
+
+        const data = await response.json();
+
+        if(response.ok && data.status === true){
+          Swal.fire(
+            "Offer has been removed",
+            "The offer has been removed",
+            "success"
+          ).then(() => {
+            location.reload();
+          })
+        } else {
+          Swal.fire("Failed", data.message || "Remving offer failed", "error");
+        }
+      } catch (error) {
+        Swal.fire(
+          "Error",
+          "Error occured while removing the offer",
+          "error"
+        ); 
+        console.error("Error Remving Offer", error);
+      }
      }
   </script>
 
