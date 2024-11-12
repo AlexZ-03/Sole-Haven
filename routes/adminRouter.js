@@ -4,6 +4,7 @@ const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController");
 const categoryController = require("../controllers/admin/categoryController");
 const brandController = require("../controllers/admin/brandController");
+const producController = require("../controllers/admin/productController");
 const multer = require("multer");
 const storage = require("../helpers/multer");
 const uploads = multer({storage:storage});
@@ -37,6 +38,10 @@ router.post('/addBrand', adminAuth, uploads.single("image"), brandController.add
 router.get('/blockBrand', adminAuth, brandController.blockBrand);
 router.get('/unblockBrand', adminAuth, brandController.unblockBrand);
 router.get('/deleteBrand', adminAuth, brandController.deleteBrand);
+
+//Product management
+router.get('/addProducts', adminAuth, producController.getProductAdd);
+router.post('/addProducts', adminAuth, uploads.array('images', 4), producController.addProducts);
 
 
 router.get('/pageError',adminController.pageError);

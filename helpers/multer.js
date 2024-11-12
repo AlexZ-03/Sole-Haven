@@ -6,7 +6,8 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, "../public/uploads/images"))
     },
     filename:(req, file, cb) => {
-        cb(null, Date.now() +"-"+file.orginalname);
+        const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, '-');
+        cb(null, Date.now() + "-" + sanitizedFilename);
     }
 });
 

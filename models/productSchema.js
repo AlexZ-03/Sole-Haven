@@ -7,7 +7,7 @@ const productSchema = new Schema({
         type: String,
         required: true
     },
-    descripition : {
+    description : {
         type: String,
         required: true
     },
@@ -20,7 +20,7 @@ const productSchema = new Schema({
         ref: "Category",
         required: true
     },
-    price : {
+    regularPrice : {
         type: Number,
         required: true
     },
@@ -35,6 +35,10 @@ const productSchema = new Schema({
     quantity: {
         type: Number,
         default: true
+    },
+    color: {
+        type: String,
+        required: true
     },
     productImage: {
         type: [String],
