@@ -23,7 +23,7 @@ const categoryInfo = async (req, res) => {
         })
     } catch (error) {
         console.log("Error loading categoryInfo", error);
-        res.redirect('/pageNotFound');
+        res.redirect('/pageError');
     }
 }
 
@@ -115,7 +115,7 @@ const getListCategory = async (req, res) => {
         await Category.updateOne({_id: id}, {$set: {isListed: false}})
         res.redirect('/admin/category');
     } catch (error) {
-        res.redirect("/pageNotFound");
+        res.redirect("/pageError");
     }
 }
 
@@ -125,7 +125,42 @@ const getUnlistCategory = async (req, res) => {
         await Category.updateOne({_id: id}, {$set: {isListed: true}});
         res.redirect('/admin/category');
     } catch (error) {
-        res.redirect('/pageNotFound');
+        res.redirect('/pageError');
+    }
+}
+
+const getEditCategory = async (req, res) => {
+    try {
+        const id = req.query.id;
+        const category = await Category.findOne({_id: id});
+        res.render("edit-category", {category: category});
+    } catch (error) {
+        res.redirect('/pageError');
+    }
+}
+
+const editCategory = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const {categoryName, description} = req.body;
+        const existingCategory = await Category.findOne({name: categoryName});
+
+        // if(existingCategory){
+        //     return res.status(400).json({error: "Category already exist, Please choose anothername"});
+        // }
+
+        const updateCategory = await Category.findByIdAndUpdate(id, {
+            name: categoryName,
+            description: description
+        }, {new: true});
+
+        if(updateCategory){
+            res.redirect('/admin/category');
+        } else{
+            res.status(500).json({error: "Category not found"});
+        }
+    } catch (error) {
+        res.status(500).json({error: "Internal Sever Error edit-category"});
     }
 }
 
@@ -136,4 +171,6 @@ module.exports = {
     removeCategoryOffer,
     getListCategory,
     getUnlistCategory,
+    getEditCategory,
+    editCategory,
 }
