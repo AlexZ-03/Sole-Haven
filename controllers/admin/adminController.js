@@ -3,14 +3,16 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 
 
-const pageNotFound = async (req, res) => {
+
+const pageError = async (req, res) => {
     try {
-        res.render("pageError")
+        res.render("pageError");
     } catch (error) {
-        res.redirect('/pageError');
-       console.log('Page not found');
+        console.log('Error rendering pageError:', error);
+        res.status(500).send("Internal Server Error");
     }
-}
+};
+
 
 
 const loadLogin = async (req, res) => {
@@ -83,6 +85,6 @@ module.exports = {
     loadLogin,
     login,
     loadDashboard,
-    pageNotFound,
+    pageError,
     logout,
 }
