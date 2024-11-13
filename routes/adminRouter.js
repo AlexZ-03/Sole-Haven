@@ -45,7 +45,11 @@ router.post('/addProducts', adminAuth, uploads.array('images', 4), producControl
 router.get('/products', adminAuth, producController.getProducts);
 router.post('/addProductOffer', adminAuth, producController.addProductOffer);
 router.post('/removeProductOffer', adminAuth, producController.removeProductOffer);
-
+router.get('/blockProduct', adminAuth, producController.blockProduct);
+router.get('/unblockProduct', adminAuth, producController.unblockProduct);
+router.get('/editProduct', adminAuth, producController.getEditProduct);
+router.post('/editProduct/:id', adminAuth, uploads.array("images",4), producController.editProduct);
+router.post('/deleteImage', adminAuth, producController.deleteSingleImage);
 
 router.get('/pageError',adminController.pageError);
 
