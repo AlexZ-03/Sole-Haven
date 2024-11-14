@@ -7,6 +7,7 @@ const db = require('./config/db');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 const passport = require('./config/passport');
+const { setUser } = require('./middlewares/auth');
 db();
 
 
@@ -27,6 +28,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(setUser);
 app.set('view engine', 'ejs');
 app.set('views', [
     path.join(__dirname,'/views/user'), 

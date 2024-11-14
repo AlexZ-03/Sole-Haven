@@ -23,6 +23,8 @@ router.get('/',userController.loadHomePage);
 router.get('/logout', userController.logout);
 
 
+router.get('/productDetails', userController.getProductPage);
+
 
 
 

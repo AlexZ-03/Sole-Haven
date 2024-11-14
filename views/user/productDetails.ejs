@@ -1,0 +1,259 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    .detail-gallery .product-image-slider {
+    width: 450px;
+    height: 450px;
+    overflow: hidden; 
+    margin: 0 auto; 
+}
+
+.detail-gallery .product-image-slider img {
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover;
+}
+
+.detail-gallery {
+    position: relative;
+}
+
+.zoom-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+}
+
+.product-image-slider {
+    position: relative;
+}
+
+.product-image-slider img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: zoom-in;
+}
+
+/* Zoom Container Styling */
+.zoom-container {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 300px;
+    height: 300px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+#zoomImage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+}
+
+/* Optional: Add hover effect for thumbnails */
+.slider-nav-thumbnails .slick-slide {
+    opacity: 0.5;
+    position: relative;
+}
+
+.slider-nav-thumbnails .slick-slide.slick-current {
+    opacity: 1;
+}
+
+.slider-nav-thumbnails .slick-slide.slick-current img {
+    border: 2px solid #a2d2c9;
+}
+
+.slider-nav-thumbnails div.slick-slide {
+    margin: 0 3px;
+}
+
+</style>
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="/" rel="nofollow">Home</a>
+                <span></span> <a><%=product.productName %></a>
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="product-detail accordion-detail">
+                        <div class="row mb-50">
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="detail-gallery">
+                                    <span class="zoom-icon"><i class="fi-rs-search"></i></span>
+                            
+                                    <!-- MAIN SLIDE -->
+                                    <div class="product-image-slider">
+                                        <figure class="border-radius-10">
+                                            <!-- Main image that will update when a thumbnail is clicked -->
+                                            <img id="mainImage" src="/uploads/product-images/<%= product.productImage[0] %>" alt="product main image" class="zoom-image">
+                                        </figure>
+                                    </div>
+                            
+                                    <!-- THUMBNAILS -->
+                                    <div class="slider-nav-thumbnails pl-15 pr-15">
+                                        <% product.productImage.forEach((image) => { %>
+                                            <div>
+                                                <!-- Corrected the image path in the onclick attribute -->
+                                                <img class="thumbnail" src="/uploads/product-images/<%= image %>" alt="product thumbnail" onclick="changeMainImage('/uploads/product-images/<%= image %>')">
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                            
+                                    <!-- Zoom Container -->
+                                    <div class="zoom-container" id="zoomContainer">
+                                        <img id="zoomImage" src="" alt="Zoomed Image">
+                                    </div>
+                                </div>
+                            </div>                                                                                    
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="detail-info">
+                                    <h2 class="title-detail"><%=product.productName %></h2>
+                                    <div class="clearfix product-price-cover">
+                                        <div class="product-price primary-color float-left">
+                                            <ins><span class="text-brand">₹<%=product.salePrice %></span></ins>
+                                            <ins><span class="old-price font-md ml-15">₹<%=product.regularPrice %></span></ins>
+                                            <span class="save-price  font-md color3 ml-15"><%=product.productOffer%>% Off</span>
+                                        </div>
+                                    </div>
+                                    <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                                    <!-- <div class="short-desc mb-30">
+                                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Aliquam rem officia, corrupti reiciendis minima nisi modi, quasi, odio minus dolore impedit fuga eum eligendi? Officia doloremque facere quia. Voluptatum, accusantium!</p>
+                                    </div> -->
+                                    <div class="product_sort_info font-xs mb-30">
+                                        <ul>
+                                            <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
+                                            <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
+                                        </ul>
+                                    </div>
+                                    <div class="attr-detail attr-color mb-15">
+                                        <strong class="mr-10">Color</strong>
+                                        <ul class="list-filter color-filter">
+                                            <li class="active">
+                                                <a href="#" data-color="<%= product.color %>">
+                                                    <span class="product-color-<%= product.color.toLowerCase() %>"></span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>                                     
+                                    <!-- <div class="attr-detail attr-size">
+                                        <strong class="mr-10">Size</strong>
+                                        <ul class="list-filter size-filter font-small">
+                                            <li><a href="#">S</a></li>
+                                            <li class="active"><a href="#">M</a></li>
+                                            <li><a href="#">L</a></li>
+                                            <li><a href="#">XL</a></li>
+                                            <li><a href="#">XXL</a></li>
+                                        </ul>
+                                    </div> -->
+                                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                                    <div class="detail-extralink">
+                                        <div class="detail-qty border radius">
+                                            <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
+                                            <span class="qty-val">1</span>
+                                            <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
+                                        </div>
+                                        <div class="product-extra-link2">
+                                            <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
+                                            <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                                        </div>
+                                    </div>
+                                    <ul class="product-meta font-xs color-grey mt-50">
+                                        <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
+                                        <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
+                                        <li>Availability:<span class="in-stock text-success ml-5"><%=product.quantity %> Items In Stock</span></li>
+                                    </ul>
+                                </div>
+                                <!-- Detail Info -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-10 m-auto entry-main-content">
+                                <h2 class="section-title style-1 mb-30">Description</h2>
+                                <div class="description mb-50">
+                                    <p><%=product.description %></p>
+                                    <h4 class="mt-30">Packaging & Delivery</h4>
+                                    <hr class="wp-block-separator is-style-wide">
+                                    <p>Less lion goodness that euphemistically robin expeditiously bluebird smugly scratched far while thus cackled sheepishly rigid after due one assenting regarding censorious while occasional or this more crane
+                                        went more as this less much amid overhung anathematic because much held one exuberantly sheep goodness so where rat wry well concomitantly.
+                                    </p>
+                                    <p>Scallop or far crud plain remarkably far by thus far iguana lewd precociously and and less rattlesnake contrary caustic wow this near alas and next and pled the yikes articulate about as less cackled dalmatian
+                                        in much less well jeering for the thanks blindly sentimental whimpered less across objectively fanciful grimaced wildly some wow and rose jeepers outgrew lugubrious luridly irrationally attractively
+                                        dachshund.
+                                    </p>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+<script>
+    function changeMainImage(imageSrc) {
+        document.getElementById('mainImage').src = imageSrc;
+    }
+
+    function changeMainImage(imageSrc) {
+        document.getElementById('mainImage').src = imageSrc;
+        // Update the zoomed image source
+        document.getElementById('zoomImage').src = imageSrc;
+    }
+
+    // Mouse hover event for zoom effect
+    const mainImage = document.getElementById('mainImage');
+    const zoomContainer = document.getElementById('zoomContainer');
+    const zoomImage = document.getElementById('zoomImage');
+
+    mainImage.addEventListener('mouseenter', () => {
+        zoomContainer.style.display = 'block';  // Show the zoom container
+    });
+
+    mainImage.addEventListener('mousemove', (e) => {
+        // Get the position of the mouse relative to the main image
+        const { left, top, width, height } = mainImage.getBoundingClientRect();
+        const offsetX = e.clientX - left;
+        const offsetY = e.clientY - top;
+
+        // Calculate the scale of the zoomed image
+        const scaleX = (offsetX / width) * 110;
+        const scaleY = (offsetY / height) * 110;
+
+        // Position the zoomed image within the zoom container
+        zoomImage.style.transform = `scale(2) translate(-${scaleX}%, -${scaleY}%)`;
+    });
+
+    mainImage.addEventListener('mouseleave', () => {
+        zoomContainer.style.display = 'none';  // Hide the zoom container
+    });
+</script>
+
+
+
+
+
+
+
+<%- include("../../views/partials/user/footer") %>

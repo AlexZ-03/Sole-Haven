@@ -11,7 +11,7 @@ const userAuth = (req, res, next) => {
             }
         })
         .catch(error => {
-            console.log("Error in userAuth". error);
+            console.log("Error in userAuth", error);
             res.status(500).send("Internal server error");
         })
     } else {
@@ -34,8 +34,23 @@ const adminAuth = (req, res, next) => {
     })
 }
 
+const setUser = async (req, res, next) => {
+    if (req.session.user) {
+        try {
+            const user = await User.findById(req.session.user);
+            if (user) {
+                res.locals.user = user;
+            }
+        } catch (error) {
+            console.error('Error setting user in locals:', error);
+        }
+    }
+    next();
+};
+
 
 module.exports = {
     userAuth,
-    adminAuth
+    adminAuth,
+    setUser,
 }

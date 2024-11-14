@@ -208,7 +208,7 @@ const login = async (req, res) => {
             return res.render('login', {message: "Incorrect Password"});
         }
 
-        req.session.user = findUser._id;
+        req.session.user = { _id: findUser._id, name: findUser.name };
         res.redirect('/');
     } catch (error) {
         console.error('Login error occured', error);
@@ -233,6 +233,22 @@ const logout = async (req, res) => {
     }
 }
 
+const getProductPage = async (req, res) => {
+    try {
+        const productId = req.query.id;
+    
+        const product = await Product.findById(productId);
+    
+        if (!product) {
+          return res.status(404).send('Product not found');
+        }
+        res.render('productDetails', { product });
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+        res.status(500).send('Server Error');
+      }
+}
+
 
 module.exports = {
     loadHomePage,
@@ -244,6 +260,7 @@ module.exports = {
     loginPage,
     login,
     logout,
+    getProductPage
     
     
 }
