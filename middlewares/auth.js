@@ -35,9 +35,9 @@ const adminAuth = (req, res, next) => {
 }
 
 const setUser = async (req, res, next) => {
-    if (req.session.user) {
+    if (req.user) {
         try {
-            const user = await User.findById(req.session.user);
+            const user = await User.findById(req.user._id);
             if (user) {
                 res.locals.user = user;
             }

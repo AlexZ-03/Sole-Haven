@@ -41,7 +41,7 @@
     display: none;
     position: absolute;
     top: 0;
-    left: 100%;
+    left: 110%;
     width: 300px;
     height: 300px;
     overflow: hidden;
@@ -55,7 +55,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transform-origin: center center;
+    transform-origin: top left;
     transition: transform 0.2s ease;
 }
 
@@ -222,31 +222,38 @@
         document.getElementById('zoomImage').src = imageSrc;
     }
 
-    // Mouse hover event for zoom effect
+    function changeMainImage(imageSrc) {
+    document.getElementById('mainImage').src = imageSrc;
+    document.getElementById('zoomImage').src = imageSrc;
+}
+
+    // Variables for main image and zoom
     const mainImage = document.getElementById('mainImage');
     const zoomContainer = document.getElementById('zoomContainer');
     const zoomImage = document.getElementById('zoomImage');
 
+    // Show the zoom container on mouse enter
     mainImage.addEventListener('mouseenter', () => {
-        zoomContainer.style.display = 'block';  // Show the zoom container
+        zoomContainer.style.display = 'block';
     });
 
     mainImage.addEventListener('mousemove', (e) => {
-        // Get the position of the mouse relative to the main image
-        const { left, top, width, height } = mainImage.getBoundingClientRect();
-        const offsetX = e.clientX - left;
-        const offsetY = e.clientY - top;
+        const rect = mainImage.getBoundingClientRect();
 
-        // Calculate the scale of the zoomed image
-        const scaleX = (offsetX / width) * 110;
-        const scaleY = (offsetY / height) * 110;
+        // Calculate mouse position relative to the main image
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
 
-        // Position the zoomed image within the zoom container
-        zoomImage.style.transform = `scale(2) translate(-${scaleX}%, -${scaleY}%)`;
+        // Calculate the percentage position of the mouse within the image
+        const percentageX = (offsetX / rect.width) * 100;
+        const percentageY = (offsetY / rect.height) * 100;
+
+        // Adjust zoomImage position to follow the mouse with correct centering
+        zoomImage.style.transform = `translate(-${percentageX}%, -${percentageY}%) scale(2)`;
     });
 
     mainImage.addEventListener('mouseleave', () => {
-        zoomContainer.style.display = 'none';  // Hide the zoom container
+        zoomContainer.style.display = 'none';
     });
 </script>
 
