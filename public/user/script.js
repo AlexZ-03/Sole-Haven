@@ -2,13 +2,13 @@ const nameid = document.getElementById('name');
 const emailid = document.getElementById('email');
 const phoneid = document.getElementById('phone');
 const passid = document.getElementById('password');
-const cpassid = document.getElementById('conformPassword'); // Corrected ID reference
+const cpassid = document.getElementById('conformPassword'); 
 
 const errorName = document.getElementById('error-name');
 const errorEmail = document.getElementById('error-email');
 const errorPhone = document.getElementById('error-phone');
 const errorPass = document.getElementById('error-password');
-const errorCpass = document.getElementById('error-conformPassword'); // Corrected ID reference
+const errorCpass = document.getElementById('error-conformPassword');
 
 const signform = document.getElementById('signform');
 
@@ -27,6 +27,11 @@ const signform = document.getElementById('signform');
             errorName.style.display = "block";
             errorName.innerHTML = "Name can only contain alphabets";
             console.log("Name validation failed: Invalid characters");
+        } else if (nameValue.length < 3) {
+            errorName.style.display = "block";
+            errorName.innerHTML = "Name must be at least 3 letters long";
+            console.log("Name validation failed: Name too short");
+        
         } else {
             errorName.style.display = "none";
             errorName.innerHTML = "";
@@ -123,7 +128,7 @@ const signform = document.getElementById('signform');
                 errorPass.innerHTML || 
                 errorCpass.innerHTML) {
                     console.log("Form submission prevented due to validation errors.");
-                    e.preventDefault(); // Stop form submission if there are errors
+                    e.preventDefault();
             }
         });
     });

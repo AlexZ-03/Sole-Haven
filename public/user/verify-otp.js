@@ -62,6 +62,7 @@ function validateOTPForm(){
 }
 
 function resendOTP() {
+    resendButton.disabled = true;
     $.ajax({
         type: "POST",
         url: "resend-otp", 
@@ -73,7 +74,7 @@ function resendOTP() {
                     showConfirmButton: false,
                     timer: 1500,
                 });
-                startTimer(60);
+                startTimer(30);
             } else {
                 Swal.fire({
                     icon: "error",
@@ -92,4 +93,4 @@ function resendOTP() {
     });
 }
 
-startTimer(60);
+startTimer(30);

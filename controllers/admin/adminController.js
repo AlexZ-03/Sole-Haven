@@ -19,7 +19,9 @@ const loadLogin = async (req, res) => {
         if(req.session.admin){
             return res.redirect("/admin")
         }
-        res.render("admin-login.ejs", {message: null})
+        const message = req.session.message;
+        req.session.message = null;
+        res.render("admin-login.ejs", {message})
 }
 
 const login = async (req, res) => {
@@ -33,14 +35,16 @@ const login = async (req, res) => {
                 req.session.admin = true;
                 return res.redirect('/admin');
             } else{
+                req.session.message = "Wrong password";
                 return res.redirect('/admin/login');
             }
         } else {
+            req.session.message = "Admin not found";
             return res.redirect("/admin/login")
         }
     } catch (error) {
         console.log("login error", error);
-        return res.redirect("/pageError");
+        return res.redirect("/admin/pageError");
     }
 }
 

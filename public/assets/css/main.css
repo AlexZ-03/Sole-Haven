@@ -893,11 +893,13 @@ button.submit, button[type='submit'] {
 }
 
 button.submit:hover, button[type='submit']:hover {
-  background-color: #046963 !important;
+  background-color: #ffffff !important;
+  color: #222222 !important;
 }
 
 .btn-brand:hover {
-  background-color: #046963 !important;
+  background-color: #ffffff !important;
+  color: #222222 !important;
 }
 
 .btn-login {

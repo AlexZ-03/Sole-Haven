@@ -196,16 +196,16 @@ const login = async (req, res) => {
         const findUser = await User.findOne({email: email});
 
         if(!findUser){
-            res.render('login', {message: "User not found"});
+            return res.render('login', {message: "Email Or Password is Incorrect"});
         }
         if(findUser.isBlocked){
-            res.render('login', {message: "User is blocked by admin"});
+            return res.render('login', {message: "User is blocked by admin"});
         }
 
         const passwordMatch = await bcrypt.compare(password, findUser.password);
 
         if(!passwordMatch) {
-            return res.render('login', {message: "Incorrect Password"});
+            return res.render('login', {message: "Email Or Password Is Incorrect "});
         }
 
         req.session.user = { _id: findUser._id, name: findUser.name };
@@ -237,7 +237,7 @@ const getProductPage = async (req, res) => {
     try {
         const productId = req.query.id;
     
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productId).populate('category');
     
         if (!product) {
           return res.status(404).send('Product not found');
