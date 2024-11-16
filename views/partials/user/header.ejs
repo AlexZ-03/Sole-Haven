@@ -85,8 +85,8 @@
                             </li>
                             <% if (locals.user) { %>
                                 <li class="nav-item">
-                                    <a class="nav-link text-white" href="/profile">
-                                        <i class="fa-solid fa-user"></i> My account
+                                    <a class="nav-link text-white" href="/userProfile">
+                                        <i class="fa-solid fa-user"></i> <%=locals.user.name %>
                                     </a>
                                 </li>
                             <% } else { %>
@@ -94,7 +94,7 @@
                                     <a class="nav-link text-white" href="/login">Login</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-white" href="/register">Sign Up</a>
+                                    <a class="nav-link text-white" href="/signup">Sign Up</a>
                                 </li>
                             <% } %>
                         </ul>

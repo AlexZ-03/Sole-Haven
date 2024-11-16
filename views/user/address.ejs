@@ -1,0 +1,169 @@
+<%- include("../../views/partials/user/header", { user: user }) %>
+
+<html>
+<head>
+    <title>Manage Address</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/profile.css">
+</head>
+<body>
+
+    <style>
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .address-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .address-item {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .address-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .address-actions button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .address-actions button.delete {
+            background-color: #dc3545;
+        }
+
+        .address-actions button.edit {
+            background-color: #28a745;
+        }
+
+        .form-container {
+            margin-top: 30px;
+        }
+
+    </style>
+
+    <% if (user) { %>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <img alt="Profile Picture" height="100" src="https://e7.pngegg.com/pngimages/136/22/png-clipart-user-profile-computer-icons-girl-customer-avatar-angle-heroes-thumbnail.png" width="100" />
+                <span>Hello</span>
+                <h4 class="p-1 text-black"><%= user.name %></h4>
+            </div>
+            <ul class="menu">
+                <li><a href="/userProfile" class="menu-link" data-content="accountOverview"><i class="fas fa-user"></i> Account Overview</a></li>
+                <li><a href="/orders" class="menu-link" data-content="myOrders"><i class="fas fa-box"></i> My Orders</a></li>
+                <li><a class="active" href="/manageAddress" class="menu-link" data-content="manageAddress"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+                <li><a href="/wallet" class="menu-link" data-content="wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
+            </ul>
+            <div class="logout text-white">
+                <button><a href="/logout" class="border-rounded text-white">LOGOUT</a></button>
+            </div>
+        </div>
+
+        <div class="content" id="content-container">
+            <!-- Content will be dynamically loaded here -->
+            <div class="form-container">
+                <h2 class="text-primary">Manage Your Addresses</h2>
+
+                <!-- Current Address -->
+                <div class="address-container">
+                    <% if (user.addresses && user.addresses.length > 0) { %>
+                        <% user.addresses.forEach(function(address, index) { %>
+                            <div class="address-item">
+                                <p><strong>Address:</strong> <%= address.street %>, <%= address.city %>, <%= address.state %>, <%= address.zip %></p>
+                                <div class="address-actions">
+                                    <button class="edit" onclick="window.location.href='/editAddress/<%= address._id %>'">Edit</button>
+                                    <button class="delete" onclick="deleteAddress('<%= address._id %>')">Delete</button>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>No addresses found. Add an address below.</p>
+                    <% } %>
+                </div>
+
+                <!-- Add New Address -->
+                <div class="form-container">
+                    <h3 class="text-primary">Add New Address</h3>
+                    <form action="/addAddress" method="POST">
+                        <div class="form-group">
+                            <label for="street" class="text-dark">Street</label>
+                            <input id="street" type="text" name="street" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city" class="text-dark">City</label>
+                            <input id="city" type="text" name="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="state" class="text-dark">State</label>
+                            <input id="state" type="text" name="state" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="zip" class="text-dark">Zip Code</label>
+                            <input id="zip" type="text" name="zip" required>
+                        </div>
+                        <button class="save" type="submit">Add Address</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <script>
+        // Handle menu item click and load content dynamically using AJAX
+        const menuLinks = document.querySelectorAll('.menu-link');
+        const contentContainer = document.getElementById('content-container');
+
+        menuLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const contentType = link.getAttribute('data-content');
+                loadContent(contentType);
+            });
+        });
+
+        function loadContent(contentType) {
+            fetch(`/content/${contentType}`)
+                .then(response => response.text())
+                .then(data => {
+                    contentContainer.innerHTML = data;
+                })
+                .catch(err => {
+                    console.error('Error loading content:', err);
+                });
+        }
+
+        function deleteAddress(addressId) {
+            if (confirm("Are you sure you want to delete this address?")) {
+                fetch(`/deleteAddress/${addressId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete address');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
+<%-include('../../views/partials/user/footer')%>

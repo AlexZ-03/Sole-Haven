@@ -1,6 +1,7 @@
 const User = require('../../models/userSchema');
 const Category = require("../../models/categorySchema");
 const Product = require("../../models/productSchema");
+const Banner = require('../../models/bannerSchema');
 const nodemailer = require('nodemailer');
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
@@ -16,6 +17,11 @@ const pageNotFound = async (req, res) => {
 
 const loadHomePage = async (req, res) => {
     try {
+        const today = new Date().toISOString();
+        const findBanner = await Banner.find({
+            startDate: {$lt: new Date(today)},
+            endDate: {$gt: new Date(today)}
+        });
         const userId = req.session.user;
         const categories = await Category.find({isListed: true});
         let productData = await Product.find(
@@ -29,9 +35,9 @@ const loadHomePage = async (req, res) => {
 
         if(userId) {
             const userData = await User.findOne({_id: userId});
-            res.render('home', {user:userData, products: productData});
+            res.render('home', {user:userData, products: productData, banner: findBanner || []});
         } else {
-            res.render('home', {products: productData});
+            res.render('home', {products: productData, banner:findBanner || []});
         }
     } catch (error) {
         console.log('Home page not found');
@@ -208,7 +214,7 @@ const login = async (req, res) => {
             return res.render('login', {message: "Email Or Password Is Incorrect "});
         }
 
-        req.session.user = { _id: findUser._id, name: findUser.name };
+        req.session.user = { _id: findUser._id, name: findUser.name, email: findUser.email};
         res.redirect('/');
     } catch (error) {
         console.error('Login error occured', error);
@@ -250,6 +256,8 @@ const getProductPage = async (req, res) => {
 }
 
 
+
+
 module.exports = {
     loadHomePage,
     pageNotFound,
@@ -260,7 +268,7 @@ module.exports = {
     loginPage,
     login,
     logout,
-    getProductPage
+    getProductPage,
     
     
 }

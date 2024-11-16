@@ -49,13 +49,11 @@ const login = async (req, res) => {
 }
 
 const loadDashboard = async (req, res) => {
-    if(req.session.admin) {
         try {
             res.render('dashboard');
         } catch (error) {
-            res.redirect('/pageError');
+            res.redirect('/admin/pageError');
         }
-    }
 }
 
 
