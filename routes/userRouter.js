@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require('../controllers/user/userController');
 const profileController = require('../controllers/user/profileController');
+const productController = require('../controllers/user/productController');
 const passport = require("passport");
 const { userAuth, setUser } = require('../middlewares/auth');
 const Product = require("../models/productSchema");
@@ -38,8 +39,11 @@ router.get('/manageAddress', userAuth, profileController.getAddressPage);
 router.post('/addAddress', userAuth, profileController.addAddress);
 router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);
 
-router.get('/cart', userAuth, profileController.getCartPage);
-router.get('/addTocart', userAuth, profileController.addToCart);
+router.get('/cart', userAuth, productController.getCartPage);
+router.get('/addTocart', userAuth, productController.addToCart);
+router.post('/cart/update/:itemId', userAuth, productController.updateCart);
+router.post('/cart/remove/:itemId', userAuth, productController.removeFromCart);
+
 
 //Product management
 router.get('/productDetails',userAuth, userController.getProductPage);

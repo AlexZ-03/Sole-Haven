@@ -163,95 +163,6 @@ const deleteAddress = async (req, res) => {
     }
 }
 
-const addToCart = async (req, res) => {
-    try {
-        const userId = req.session.user._id;
-        const { productId, quantity } = req.query;
-
-        const product = await Product.findById(productId);
-
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-
-        const totalPrice = product.salePrice * quantity;
-
-        let cart = await Cart.findOne({ userId });
-
-        if (!cart) {
-            cart = new Cart({
-                userId,
-                items: [{
-                    productId,
-                    quantity,
-                    price: product.salePrice,
-                    totalPrice
-                }]
-            });
-            await User.findByIdAndUpdate(userId, {
-                $push: { cart: cart._id }
-            });
-        } else {
-            const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
-
-            if (itemIndex > -1) {
-                cart.items[itemIndex].quantity += quantity;
-                cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.salePrice;
-            } else {
-                cart.items.push({
-                    productId,
-                    quantity,
-                    price: product.salePrice,
-                    totalPrice
-                });
-            }
-        }
-
-        await cart.save();
-        res.json({
-            success: true,
-            message: 'Product added to cart successfully',
-            cart
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Something went wrong' });
-    }
-}
-
-
-const getCartPage = async (req, res) => {
-    try {
-        if (!req.session.user) {
-            return res.redirect('/login');
-        }
-
-        const userId = req.session.user._id;
-
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-
-        if (!cart || cart.items.length === 0) {
-            return res.render('cart', {
-                title: 'Your Cart',
-                message: 'Your cart is empty.',
-                cart: null
-            });
-        }
-
-        const totalPrice = cart.items.reduce((acc, item) => acc + item.totalPrice, 0);
-
-        res.render('cart', {
-            title: 'Your Cart',
-            cart: cart.items,
-            totalPrice: totalPrice,
-            message: cart.items.length > 0 ? '' : 'Your cart is empty.',
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Something went wrong' });
-    }
-};
-
 
 module.exports = {
     userProfile,
@@ -260,6 +171,4 @@ module.exports = {
     getAddressPage,
     addAddress,
     deleteAddress,
-    addToCart,
-    getCartPage,
 }

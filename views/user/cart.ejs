@@ -20,11 +20,23 @@
                     <tr>
                         <td><%= item.productId.productName %></td> <!-- Use the populated product details -->
                         <td>
-                            <!-- Quantity Selection -->
                             <form action="/cart/update/<%= item._id %>" method="POST">
-                                <input type="number" name="quantity" value="<%= item.quantity %>" min="1" class="form-control" style="width: 80px;" required>
-                                <button type="submit" class="btn btn-sm btn-primary mt-2">Update</button>
-                            </form>
+                            <div class="input-group" style="width: 160px;">
+                                <!-- Decrease button -->
+                                <button type="submit" name="decreaseQuantity" value="1" class="btn btn-sm btn-success"
+                                        <%= item.quantity <= 1 ? 'disabled' : '' %> >
+                                    -
+                                </button>
+                                <!-- Quantity input field -->
+                                <input type="number" class="form-control" name="quantity" value="<%= item.quantity %>" min="1"
+                                       style="width: 60px;" readonly>
+                                <!-- Increase button -->
+                                <button type="submit" name="increaseQuantity" value="1" class="btn btn-sm btn-success"
+                                        <%= item.quantity >= item.productId.quantity ? 'disabled' : '' %> >
+                                    +
+                                </button>
+                            </div>
+                        </form>
                         </td>
                         <td>₹<%= item.price.toFixed(2) %></td>
                         <td>₹<%= (item.price * item.quantity).toFixed(2) %></td>
