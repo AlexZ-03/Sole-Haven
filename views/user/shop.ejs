@@ -1,0 +1,104 @@
+<%- include("../../views/partials/user/header") %>
+
+<div class="container mt-4">
+
+    <!-- Search and Sort -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <!-- Search Bar -->
+            <form action="/shop" method="GET">
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    name="search" 
+                    placeholder="Search for products..."
+                    value="<%= typeof search !== 'undefined' ? search : '' %>"
+                >
+            </form>
+        </div>
+
+        <div class="col-md-6">
+            <select class="form-select" id="sortFilter" onchange="applySort(this.value)">
+                <option value="popularity">Sort by Popularity</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Average Ratings</option>
+                <option value="featured">Featured</option>
+                <option value="new">New Arrivals</option>
+                <option value="az">aA - zZ</option>
+                <option value="za">zZ - aA</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row" id="productGrid">
+        <% products.forEach(product => { %>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <a href="/productDetails?id=<%=product._id%>">
+                    <img 
+                        src="/uploads/product-images/<%=product.productImage[0] %>" 
+                        class="card-img-top" 
+                        alt="<%= product.productName %>"
+                    ></a>
+                    <div class="card-body">
+                        <h5 class="card-title"><%= product.productName %></h5>
+                        <p class="card-text">$<%= product.salePrice %></p>
+                        <% if (product.averageRating) { %>
+                            <p class="card-text">Rating: <%= product.averageRating %> ⭐</p>
+                        <% } else { %>
+                            <p class="card-text">No reviews yet</p>
+                        <% } %>
+                        <button class="btn btn-primary">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<script>
+    function applySort(sortBy) {
+    const products = [...document.querySelectorAll('.card')];
+    const grid = document.getElementById('productGrid');
+
+    products.sort((a, b) => {
+        const nameA = a.querySelector('.card-title').innerText.toLowerCase();
+        const nameB = b.querySelector('.card-title').innerText.toLowerCase();
+        const priceA = parseFloat(a.querySelector('.card-text').innerText.replace('$', ''));
+        const priceB = parseFloat(b.querySelector('.card-text').innerText.replace('$', ''));
+
+        switch (sortBy) {
+            case 'popularity':
+                return parseFloat(b.dataset.popularity) - parseFloat(a.dataset.popularity);
+            case 'price-low':
+                return priceA - priceB;
+            case 'price-high':
+                return priceB - priceA;
+            case 'az':
+                return nameA.localeCompare(nameB);
+            case 'za':
+                return nameB.localeCompare(nameA);
+            case 'featured':
+                return b.dataset.featured - a.dataset.featured;
+            case 'new':
+                return b.dataset.newArrival - a.dataset.newArrival;
+            default:
+                return 0;
+        }
+    });
+
+    while (grid.firstChild) {
+        grid.removeChild(grid.firstChild);
+    }
+
+    products.forEach(product => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'col-md-4 mb-4'; 
+        wrapper.appendChild(product);
+        grid.appendChild(wrapper);
+    });
+}
+</script>
+
+<%- include("../../views/partials/user/footer") %>

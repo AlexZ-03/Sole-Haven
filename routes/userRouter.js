@@ -43,10 +43,12 @@ router.get('/cart', userAuth, productController.getCartPage);
 router.get('/addTocart', userAuth, productController.addToCart);
 router.post('/cart/update/:itemId', userAuth, productController.updateCart);
 router.post('/cart/remove/:itemId', userAuth, productController.removeFromCart);
+router.get('/shop', productController.getShopPage);
+
 
 
 //Product management
-router.get('/productDetails',userAuth, userController.getProductPage);
+router.get('/productDetails', userController.getProductPage);
 
 
 

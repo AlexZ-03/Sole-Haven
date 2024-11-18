@@ -77,6 +77,58 @@
         margin: 0 3px;
     }
 
+    .product-rating {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .star-rating {
+        color: #FFD700; /* Golden color for stars */
+    }
+
+    .star-rating i {
+        font-size: 18px;
+    }
+
+    /* Reviews Section */
+    .reviews-section {
+        margin-top: 50px;
+    }
+
+    .review-item {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .review-item .review-author {
+        font-weight: bold;
+    }
+
+    .review-item .review-content {
+        margin-top: 5px;
+    }
+
+    .add-review-form {
+        margin-top: 30px;
+    }
+
+    .add-review-form textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .add-review-form button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+    }
     </style>
 
 
@@ -133,6 +185,19 @@
                                                 <span class="save-price  font-md color3 ml-15"><%=product.productOffer%>% Off</span>
                                             </div>
                                         </div>
+                                        <div class="product-rating">
+                                            <div class="star-rating">
+                                                <% for (let i = 0; i < Math.floor(product.rating); i++) { %>
+                                                    <i class="fi-rs-star"></i>
+                                                <% } %>
+                                                <% if (product.rating % 1 !== 0) { %> 
+                                                    <i class="fi-rs-star-half-alt"></i>
+                                                <% } %>
+                                                <% for (let i = 0; i < 5 - Math.ceil(product.rating); i++) { %>
+                                                    <i class="fi-rs-star"></i>
+                                                <% } %>
+                                            </div>
+                                        </div>
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                         <div class="product_sort_info font-xs mb-30">
                                             <ul>
@@ -171,6 +236,7 @@
                                     </div>
                                     <!-- Detail Info -->
                                 </div>
+                                
                             </div>
                             <div class="row">
                                 <div class="col-lg-10 m-auto entry-main-content">
@@ -190,6 +256,32 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="reviews-section">
+                                <h4 class="mb-30">Customer Reviews</h4>
+                                <% product.reviews.forEach((review) => { %>
+                                    <div class="review-item">
+                                        <div class="review-author"><%= review.author %></div>
+                                        <div class="review-content"><%= review.content %></div>
+                                        <div class="review-rating">
+                                            <% for (let i = 0; i < Math.floor(review.rating); i++) { %>
+                                                <i class="fi-rs-star"></i>
+                                            <% } %>
+                                            <% if (review.rating % 1 !== 0) { %> 
+                                                <i class="fi-rs-star-half-alt"></i>
+                                            <% } %>
+                                            <% for (let i = 0; i < 5 - Math.ceil(review.rating); i++) { %>
+                                                <i class="fi-rs-star"></i>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% }) %>
+
+                                <!-- Add Review Form -->
+                                <div class="add-review-form">
+                                    <h5>Write a Review</h5>
+                                    <textarea id="reviewContent" placeholder="Write your review here..."></textarea>
+                                    <button onclick="submitReview()">Submit Review</button>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -262,6 +354,37 @@
                 console.error("Error:", error);
                 Swal.fire("Error", "There was an issue with adding the product to the cart.", "error");
             });
+    }
+
+    function submitReview() {
+        const reviewContent = document.getElementById('reviewContent').value;
+        const productId = '<%= product._id %>';
+        
+        if (!reviewContent) {
+            Swal.fire('Error', 'Please write a review before submitting', 'error');
+            return;
+        }
+
+        // Example of adding review to the backend
+        fetch('/addReview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId, content: reviewContent, rating: 5 }) // Example of a 5-star review
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Success', 'Your review has been submitted!', 'success');
+                // Optionally, refresh the page or update reviews section dynamically
+            } else {
+                Swal.fire('Error', 'There was an error submitting your review.', 'error');
+            }
+        })
+        .catch(error => {
+            Swal.fire('Error', 'Something went wrong.', 'error');
+        });
     }
     </script>
 

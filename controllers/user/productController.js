@@ -1,6 +1,7 @@
 const User = require('../../models/userSchema');
 const Cart = require('../../models/cartSchema');
 const Product = require("../../models/productSchema");
+const Review = require('../../models/reviewSchema');
 
 
 
@@ -173,6 +174,80 @@ const removeFromCart = async (req, res) => {
     }
 };
 
+const getShopPage = async (req, res) => {
+    try {
+        const { search, sort } = req.query;
+        let filter = {};
+        let sortCriteria = {};
+
+        if (search) {
+            filter = {
+                ...filter,
+                productName: { $regex: search, $options: 'i' }
+            };
+        }
+
+        switch (sort) {
+            case 'popularity':
+                sortCriteria = { popularity: -1 };
+                break;
+            case 'price-low':
+                sortCriteria = { salePrice: 1 };
+                break;
+            case 'price-high':
+                sortCriteria = { salePrice: -1 };
+                break;
+            case 'az':
+                sortCriteria = { productName: 1 };
+                break;
+            case 'za':
+                sortCriteria = { productName: -1 };
+                break;
+            case 'new':
+                sortCriteria = { createdAt: -1 };
+                break;
+            default:
+                sortCriteria = {};
+        }
+
+        const products = await Product.find(filter)
+        .sort(sortCriteria)
+        .populate({
+            path: 'reviews',
+            select: 'rating',
+        });
+
+        products.forEach(product => {
+            console.log('Product Reviews:', product.reviews);  // Debugging reviews
+        });
+
+        const productsWithRatings = products.map(product => {
+            const reviews = product.reviews || [];  // Ensure reviews is an array, default to empty array if undefined
+
+            const ratings = reviews.map(review => review.rating);
+            const averageRating = ratings.length > 0
+                ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
+                : null;
+
+            console.log('Average Rating:', averageRating);  // Debugging average rating
+
+            return {
+                ...product.toObject(),  // Convert product to a plain object
+                averageRating,
+            };
+        });
+
+        res.render('shop', {
+            title: 'Shop',
+            products: productsWithRatings,
+            search,
+        });
+    } catch (error) {
+        console.error('Error fetching shop page:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
 
 
 module.exports = {
@@ -180,4 +255,5 @@ module.exports = {
     getCartPage,
     updateCart,
     removeFromCart,
+    getShopPage,
 }
