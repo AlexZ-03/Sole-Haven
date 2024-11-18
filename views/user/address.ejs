@@ -64,7 +64,7 @@
                 <h4 class="p-1 text-black"><%= user.name %></h4>
             </div>
             <ul class="menu">
-                <li><a href="/userProfile" class="menu-link" data-content="accountOverview"><i class="fas fa-user"></i> Account Overview</a></li>
+                <li><a class="active" href="/userProfile"><i class="fas fa-user"></i> Account Overview</a></li>
                 <li><a href="/orders" class="menu-link" data-content="myOrders"><i class="fas fa-box"></i> My Orders</a></li>
                 <li><a class="active" href="/manageAddress" class="menu-link" data-content="manageAddress"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
                 <li><a href="/wallet" class="menu-link" data-content="wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
@@ -81,10 +81,17 @@
 
                 <!-- Current Address -->
                 <div class="address-container">
-                    <% if (user.addresses && user.addresses.length > 0) { %>
-                        <% user.addresses.forEach(function(address, index) { %>
+                    <% if (addresses && addresses.length > 0) { %>
+                        <% addresses.forEach(function(address, index) { %>
                             <div class="address-item">
-                                <p><strong>Address:</strong> <%= address.street %>, <%= address.city %>, <%= address.state %>, <%= address.zip %></p>
+                                <p><strong>Address Type:</strong> <%= address.addressType %></p>
+                                <p><strong>Name:</strong> <%= address.name %></p>
+                                <p><strong>House:</strong> <%= address.house %></p>
+                                <p><strong>City:</strong> <%= address.city %></p>
+                                <p><strong>State:</strong> <%= address.state %></p>
+                                <p><strong>Pincode:</strong> <%= address.pincode %></p>
+                                <p><strong>Landmark:</strong> <%= address.landMark %></p>
+                                <p><strong>Phone:</strong> <%= address.phone %></p>
                                 <div class="address-actions">
                                     <button class="edit" onclick="window.location.href='/editAddress/<%= address._id %>'">Edit</button>
                                     <button class="delete" onclick="deleteAddress('<%= address._id %>')">Delete</button>
@@ -99,10 +106,18 @@
                 <!-- Add New Address -->
                 <div class="form-container">
                     <h3 class="text-primary">Add New Address</h3>
-                    <form action="/addAddress" method="POST">
+                    <form id="addAddressForm">
                         <div class="form-group">
-                            <label for="street" class="text-dark">Street</label>
-                            <input id="street" type="text" name="street" required>
+                            <label for="addressType" class="text-dark">Address Type</label>
+                            <input id="addressType" type="text" name="addressType" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="name" class="text-dark">Name</label>
+                            <input id="name" type="text" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="house" class="text-dark">House</label>
+                            <input id="house" type="text" name="house" required>
                         </div>
                         <div class="form-group">
                             <label for="city" class="text-dark">City</label>
@@ -113,19 +128,102 @@
                             <input id="state" type="text" name="state" required>
                         </div>
                         <div class="form-group">
-                            <label for="zip" class="text-dark">Zip Code</label>
-                            <input id="zip" type="text" name="zip" required>
+                            <label for="pincode" class="text-dark">Pincode</label>
+                            <input id="pincode" type="text" name="pincode" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="landMark" class="text-dark">Landmark</label>
+                            <input id="landMark" type="text" name="landMark">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone" class="text-dark">Phone</label>
+                            <input id="phone" type="text" name="phone" required>
                         </div>
                         <button class="save" type="submit">Add Address</button>
                     </form>
-                </div>
+                </div>                
             </div>
         </div>
     </div>
     <% } %>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Handle menu item click and load content dynamically using AJAX
+        document.getElementById('addAddressForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/addAddress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Address saved successfully!',
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    const result = await response.json();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Failed to save address!',
+                    });
+                }
+            } catch (error) {
+                console.error('Error saving address:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred!',
+                });
+            }
+        });
+
+        function deleteAddress(addressId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/deleteAddress/${addressId}`, {
+                        method: 'DELETE',
+                    })
+                    .then((response) => {
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Address deleted!',
+                                showConfirmButton: false,
+                                timer: 1500,
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed to delete address!',
+                                text: 'Please try again later.',
+                            });
+                        }
+                    });
+                }
+            });
+        }
         const menuLinks = document.querySelectorAll('.menu-link');
         const contentContainer = document.getElementById('content-container');
 
@@ -147,22 +245,8 @@
                     console.error('Error loading content:', err);
                 });
         }
-
-        function deleteAddress(addressId) {
-            if (confirm("Are you sure you want to delete this address?")) {
-                fetch(`/deleteAddress/${addressId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to delete address');
-                    }
-                });
-            }
-        }
     </script>
+
 </body>
 </html>
 

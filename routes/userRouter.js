@@ -33,13 +33,17 @@ router.get('/logout', userController.logout);
 //Profile routes
 router.get('/userProfile', userAuth, profileController.userProfile)
 router.get('/orders', userAuth, profileController.getOrders);
-
-
-//Product management
-router.get('/productDetails',userAuth, userController.getProductPage);
 router.post('/profileEdit', userAuth, profileController.editProfile);
 router.get('/manageAddress', userAuth, profileController.getAddressPage);
 router.post('/addAddress', userAuth, profileController.addAddress);
+router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);
+
+router.get('/cart', userAuth, profileController.getCartPage);
+router.get('/addTocart', userAuth, profileController.addToCart);
+
+//Product management
+router.get('/productDetails',userAuth, userController.getProductPage);
+
 
 
 

@@ -32,9 +32,17 @@ const addressSchema = new Schema ({
             type : Number,
             required : true
         },
+        house : {
+          type : String,
+          required: true  
+        },
         phone : {
             type : String,
             required : true
+        },
+        isDeleted : {
+            type : Boolean,
+            default: false
         }
     }]
 })
