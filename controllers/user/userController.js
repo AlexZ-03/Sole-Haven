@@ -243,7 +243,12 @@ const getProductPage = async (req, res) => {
     try {
         const productId = req.query.id;
     
-        const product = await Product.findById(productId).populate('category');
+        const product = await Product.findById(productId)
+            .populate('category')
+            .populate({
+                path: 'reviews',
+                populate: { path: 'userId', select: 'name' }
+            });
     
         if (!product) {
           return res.status(404).send('Product not found');

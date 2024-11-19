@@ -77,58 +77,27 @@
         margin: 0 3px;
     }
 
-    .product-rating {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
+    .product-rating-section {
+        margin: 20px 0;
     }
 
-    .star-rating {
-        color: #FFD700; /* Golden color for stars */
+    .reviews {
+        margin-top: 15px;
     }
 
-    .star-rating i {
-        font-size: 18px;
-    }
-
-    /* Reviews Section */
-    .reviews-section {
-        margin-top: 50px;
-    }
-
-    .review-item {
+    .review {
+        background: #f9f9f9;
         padding: 10px;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .review-item .review-author {
-        font-weight: bold;
-    }
-
-    .review-item .review-content {
-        margin-top: 5px;
-    }
-
-    .add-review-form {
-        margin-top: 30px;
-    }
-
-    .add-review-form textarea {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
         border-radius: 5px;
     }
 
-    .add-review-form button {
-        margin-top: 10px;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
+    .submit-review-section {
+        margin-top: 25px;
+        padding: 15px;
+        background: #f4f4f4;
+        border-radius: 8px;
     }
+
     </style>
 
 
@@ -185,19 +154,19 @@
                                                 <span class="save-price  font-md color3 ml-15"><%=product.productOffer%>% Off</span>
                                             </div>
                                         </div>
-                                        <div class="product-rating">
-                                            <div class="star-rating">
-                                                <% for (let i = 0; i < Math.floor(product.rating); i++) { %>
-                                                    <i class="fi-rs-star"></i>
-                                                <% } %>
-                                                <% if (product.rating % 1 !== 0) { %> 
-                                                    <i class="fi-rs-star-half-alt"></i>
-                                                <% } %>
-                                                <% for (let i = 0; i < 5 - Math.ceil(product.rating); i++) { %>
-                                                    <i class="fi-rs-star"></i>
-                                                <% } %>
+                                        <div class="product-rate-cover text-end">
+                                            <div class="product-rate d-inline-block">
+                                                <div 
+                                                    class="product-rating" 
+                                                    style="width: <%= product.reviews.length 
+                                                        ? ((product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length) * 20) 
+                                                        : 0 %>%;">
+                                                </div>
                                             </div>
-                                        </div>
+                                            <span class="font-small ml-5 text-muted">
+                                                (<%= product.reviews.length %> reviews)
+                                            </span>
+                                        </div>                                                                                
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                         <div class="product_sort_info font-xs mb-30">
                                             <ul>
@@ -256,33 +225,60 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="reviews-section">
-                                <h4 class="mb-30">Customer Reviews</h4>
-                                <% product.reviews.forEach((review) => { %>
-                                    <div class="review-item">
-                                        <div class="review-author"><%= review.author %></div>
-                                        <div class="review-content"><%= review.content %></div>
-                                        <div class="review-rating">
-                                            <% for (let i = 0; i < Math.floor(review.rating); i++) { %>
-                                                <i class="fi-rs-star"></i>
-                                            <% } %>
-                                            <% if (review.rating % 1 !== 0) { %> 
-                                                <i class="fi-rs-star-half-alt"></i>
-                                            <% } %>
-                                            <% for (let i = 0; i < 5 - Math.ceil(review.rating); i++) { %>
-                                                <i class="fi-rs-star"></i>
-                                            <% } %>
-                                        </div>
+                            <div class="comments-area">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h4 class="mb-30">Customer Reviews</h4>
+                                        <% if (product.reviews.length) { %>
+                                            <% product.reviews.forEach(review => { %>
+                                                <div class="single-comment mb-3">
+                                                    <p><strong><%= review.userId.name %>:</strong></p>
+                                                    <p><%= review.comment %></p>
+                                                    <small class="text-muted">
+                                                        <%= new Date(review.createdAt).toLocaleDateString() %>
+                                                    </small>
+                                                </div>
+                                                <hr />
+                                            <% }); %>
+                                        <% } else { %>
+                                            <p>No reviews yet. Be the first to review!</p>
+                                        <% } %>
                                     </div>
-                                <% }) %>
-
-                                <!-- Add Review Form -->
-                                <div class="add-review-form">
-                                    <h5>Write a Review</h5>
-                                    <textarea id="reviewContent" placeholder="Write your review here..."></textarea>
-                                    <button onclick="submitReview()">Submit Review</button>
                                 </div>
-                        </div>
+                            </div>
+                            <div class="submit-review-section mt-5">
+                                <h4 class="mb-30">Submit Your Review:</h4>
+                                <form action="/productDetails/<%= product._id %>/review" method="POST" class="form-review">
+                                    <div class="form-group">
+                                        <label for="rating" class="font-sm">Rating (1-5):</label>
+                                        <input 
+                                            type="number" 
+                                            id="rating" 
+                                            name="rating" 
+                                            min="1" 
+                                            max="5" 
+                                            class="form-control" 
+                                            placeholder="Enter rating (1-5)" 
+                                            required
+                                        />
+                                    </div>
+                                    <div class="form-group mt-3">
+                                        <label for="comment" class="font-sm">Comment:</label>
+                                        <textarea 
+                                            id="comment" 
+                                            name="comment" 
+                                            class="form-control" 
+                                            maxlength="500" 
+                                            placeholder="Write your review here..." 
+                                            rows="5" 
+                                            required
+                                        ></textarea>
+                                    </div>
+                                    <div class="mt-4 text-end">
+                                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                                    </div>
+                                </form>
+                            </div>                                                       
                     </div>
                 </div>
             </div>
@@ -294,7 +290,6 @@
     <script>
         function changeMainImage(imageSrc) {
             document.getElementById('mainImage').src = imageSrc;
-            // Update the zoomed image source
             document.getElementById('zoomImage').src = imageSrc;
         }
 
@@ -303,12 +298,10 @@
         document.getElementById('zoomImage').src = imageSrc;
     }
 
-        // Variables for main image and zoom
         const mainImage = document.getElementById('mainImage');
         const zoomContainer = document.getElementById('zoomContainer');
         const zoomImage = document.getElementById('zoomImage');
 
-        // Show the zoom container on mouse enter
         mainImage.addEventListener('mouseenter', () => {
             zoomContainer.style.display = 'block';
         });
@@ -316,15 +309,12 @@
         mainImage.addEventListener('mousemove', (e) => {
             const rect = mainImage.getBoundingClientRect();
 
-            // Calculate mouse position relative to the main image
             const offsetX = e.clientX - rect.left;
             const offsetY = e.clientY - rect.top;
 
-            // Calculate the percentage position of the mouse within the image
             const percentageX = (offsetX / rect.width) * 100;
             const percentageY = (offsetY / rect.height) * 100;
 
-            // Adjust zoomImage position to follow the mouse with correct centering
             zoomImage.style.transform = `translate(-${percentageX}%, -${percentageY}%) scale(2)`;
         });
 
@@ -356,36 +346,6 @@
             });
     }
 
-    function submitReview() {
-        const reviewContent = document.getElementById('reviewContent').value;
-        const productId = '<%= product._id %>';
-        
-        if (!reviewContent) {
-            Swal.fire('Error', 'Please write a review before submitting', 'error');
-            return;
-        }
-
-        // Example of adding review to the backend
-        fetch('/addReview', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ productId, content: reviewContent, rating: 5 }) // Example of a 5-star review
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire('Success', 'Your review has been submitted!', 'success');
-                // Optionally, refresh the page or update reviews section dynamically
-            } else {
-                Swal.fire('Error', 'There was an error submitting your review.', 'error');
-            }
-        })
-        .catch(error => {
-            Swal.fire('Error', 'Something went wrong.', 'error');
-        });
-    }
     </script>
 
 

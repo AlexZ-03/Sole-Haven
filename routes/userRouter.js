@@ -45,10 +45,13 @@ router.post('/cart/update/:itemId', userAuth, productController.updateCart);
 router.post('/cart/remove/:itemId', userAuth, productController.removeFromCart);
 router.get('/shop', productController.getShopPage);
 
-
+router.get('/checkout', userAuth, productController.getCheckoutPage);
+router.post('/checkout', userAuth, productController.postCheckoutPage);
+router.get('/orderConformed', userAuth, productController.getOrderConformed);
 
 //Product management
 router.get('/productDetails', userController.getProductPage);
+router.post('/productDetails/:id/review', productController.submitReview);
 
 
 
