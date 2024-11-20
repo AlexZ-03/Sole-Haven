@@ -2,6 +2,7 @@ const User = require('../../models/userSchema');
 const Address = require('../../models/addressSchema');
 const Cart = require('../../models/cartSchema');
 const Product = require("../../models/productSchema");
+const Orders = require('../../models/orderSchema');
 const bcrypt = require('bcrypt');
 
 
@@ -25,19 +26,96 @@ const userProfile = async (req, res) => {
 const getOrders = async (req, res) => {
     try {
         const userId = req.session.user;
-        const userData = await User.findById(userId);
-
-        if(userData){
-            res.render('orders', {
-                user: userData
-            })
+        if (!userId) {
+            return res.redirect('/login');
         }
+
+        const userData = await User.findById(userId)
+        .populate({
+            path: 'orderHistory',
+            populate: {
+                path: 'orderedItems.product',
+                model: 'Product'
+            }
+        });
+
+
+        if (!userData) {
+            return res.redirect('/login');
+        }
+
+        const cancelableStatuses = ['Pending', 'Processing', 'Shipped'];
+        const returnableStatuses = ['Delivered'];
+
+        const orders = userData.orderHistory.map(order => {
+            return {
+                orderId: order.orderId,
+                status: order.status,
+                total: order.totalPrice,
+                orderedItems: order.orderedItems.map(item => {
+                    console.log('Product Name:', item.product.productName);
+                    console.log('Product Image:', item.product.productImage[0]);
+
+                    return {
+                        productName: item.product.productName,
+                        productImage: item.product.productImage[0],
+                        productId: item.product._id,
+                        price: item.product.salePrice || item.product.regularPrice,
+                        quantity: item.quantity
+                    };
+                }),
+                canCancel: cancelableStatuses.includes(order.status),
+                canReturn: returnableStatuses.includes(order.status)
+            };
+        });        
+
+        res.render('orders', {
+            user: userData,
+            orders: orders
+        });
     } catch (error) {
-        
+        console.error('Error fetching orders:', error);
+        res.status(500).send('Server Error');
     }
-}
+};
 
+const cancelOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.session.user;
 
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId).populate({
+            path: 'orderHistory',
+            populate: {
+                path: 'orderedItems.product',
+                model: 'Product'
+            }
+        });
+
+        const order = userData.orderHistory.find(order => order.orderId === orderId);
+        
+        order.status = 'Canceled';
+        await order.save();
+
+        for (let item of order.orderedItems) {
+            const product = item.product;
+
+            if (product && product.quantity >= 0) {
+                product.quantity += item.quantity;
+                await product.save();
+            }
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error canceling order:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 const editProfile = async (req, res) => {
     try {
@@ -171,4 +249,5 @@ module.exports = {
     getAddressPage,
     addAddress,
     deleteAddress,
+    cancelOrder,
 }

@@ -4,60 +4,256 @@
 <head>
     <title>My Orders</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/css/orders.css">
+    <link rel="stylesheet" href="/assets/css/profile.css">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .breadcrumb {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .order-table th, .order-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .order-table th {
+            background-color: #f2f2f2;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .order-actions button {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .order-item-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        .order-item-table th, .order-item-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .order-item-table th {
+            background-color: #f8f9fa;
+        }
+
+        .order-item-table img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+
+        .order-item-table td {
+            vertical-align: middle;
+        }
+
+        .cancel-order-btn {
+            background-color: #ff3333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+        }
+        .return-order-btn {
+            background-color: #ff3333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+        }
+
+    </style>
 </head>
 <body>
+
     <% if (user) { %>
-    <div class="container">
-        <div class="sidebar">
-            <div class="profile">
-                <img alt="Profile Picture" height="100" src="https://e7.pngegg.com/pngimages/136/22/png-clipart-user-profile-computer-icons-girl-customer-avatar-angle-heroes-thumbnail.png" width="100" />
-                <span>Hello</span>
-                <h4 class="p-1 text-black"><%= user.name %></h4>
+
+        <div class="container">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/userProfile">Account Overview</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">My Orders</li>
+                </ol>
+            </nav>
+        
+            <div class="header pl-200">
+                <h2>My Orders</h2>
             </div>
-            <ul class="menu">
-                <li><a href="/userProfile"><i class="fas fa-user"></i> Account Overview</a></li>
-                <li><a class="active" href="/order"><i class="fas fa-box"></i> My Orders</a></li>
-                <li><a href="/manageAddress"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
-                <li><a href="/wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
-            </ul>
-            <div class="logout text-white">
-                <button><a href="/logout" class="border-rounded text-white">LOGOUT</a></button>
-            </div>
+        
+            <% if (orders.length > 0) { %>
+                <% orders.forEach(function(order) { %>
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Status</th>
+                                <th>Total Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><%= order.orderId %></td>
+                                <td><%= order.status %></td>
+                                <td>₹<%= order.total %></td>
+                                <td>
+                                    <div class="order-actions">
+                                        <% if (order.status === 'Canceled') { %>
+                                            <span>Order is canceled</span>
+                                        <% } else { %>
+                                            <% if (order.canCancel) { %>
+                                                <button class="cancel-order-btn">Cancel Order</button>
+                                            <% } %>
+                                            <% if (order.canReturn) { %>
+                                                <button class="return-order-btn">Return Product</button>
+                                            <% } %>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="4">
+                                    <% if (order.orderedItems && Array.isArray(order.orderedItems)) { %>
+                                        <table class="order-item-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Quantity</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% order.orderedItems.forEach(function(item) { %>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="/productDetails?id=<%=item.productId %>">
+                                                            <% if (item.productName) { %>
+                                                                <img src="/uploads/product-images/<%= item.productImage %>" alt="<%= item.productName %>" />
+                                                                <%= item.productName %>
+                                                            <% } else { %>
+                                                                <p>Product not available</p>
+                                                            <% } %>
+                                                        </a>
+                                                        </td>
+                                                        <td><%= item.quantity %></td>
+                                                        <td>₹<%= item.price %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    <% } else { %>
+                                        <p>No items found in this order.</p>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                <% }); %>
+            <% } else { %>
+                <p>You have no orders yet.</p>
+            <% } %>
+            
         </div>
-        <div class="content">
-            <div class="orders-container">
-                <h2 class="text-primary">My Orders</h2>
-                <% if (orders && orders.length > 0) { %>
-                    <ul class="orders-list">
-                        <% orders.forEach(order => { %>
-                            <li class="order-item">
-                                <div class="order-header">
-                                    <strong>Order ID:</strong> <%= order.orderId %>
-                                    <span><strong>Status:</strong> <%= order.status %></span>
-                                </div>
-                                <div class="order-details">
-                                    <p><strong>Order Date:</strong> <%= order.date %></p>
-                                    <p><strong>Total:</strong> $<%= order.total %></p>
-                                    <p><strong>Items:</strong></p>
-                                    <ul class="order-items">
-                                        <% order.items.forEach(item => { %>
-                                            <li>
-                                                <strong><%= item.name %></strong> - Quantity: <%= item.quantity %>, Price: $<%= item.price %>
-                                            </li>
-                                        <% }) %>
-                                    </ul>
-                                </div>
-                            </li>
-                        <% }) %>
-                    </ul>
-                <% } else { %>
-                    <p class="no-orders">You have no orders yet.</p>
-                <% } %>
-            </div>
-        </div>
-    </div>
+        
     <% } %>
+
 </body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+        
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, cancel it!',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const orderId = this.closest('tr').querySelector('td').textContent;
+                        
+                        fetch(`/cancel-order/${orderId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ orderId: orderId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Canceled!', 'Your order has been canceled.', 'success')
+                                  .then(() => {
+                                      window.location.reload();
+                                  });
+                            } else {
+                                Swal.fire('Error', 'There was an issue canceling the order.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('Error', 'There was an issue with the server.', 'error');
+                        });
+                    }
+                });
+            });
+        });
+    });
+</script>
+
 </html>
-<%- include("../../views/partials/user/footer") %>
+
+<%- include('../../views/partials/user/footer') %>

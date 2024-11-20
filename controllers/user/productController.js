@@ -384,6 +384,10 @@ const postCheckoutPage = async (req, res) => {
 
         await Cart.deleteOne({ userId });
 
+        await User.findByIdAndUpdate(userId, {
+            $push: { orderHistory: newOrder._id }
+        });
+
         res.redirect(`/orderConformed?message=Your order with Order ID: ${newOrder._id} has been confirmed successfully!&orderId=${newOrder._id}`);
     } catch (error) {
         console.error('Error processing checkout:', error);
