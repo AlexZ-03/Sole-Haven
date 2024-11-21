@@ -9,6 +9,11 @@ const orderSchema = new Schema({
         default: () => uuidv4(),
         unquie: true
     },
+    customer: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     orderedItems: [{
         product:{
             type: Schema.Types.ObjectId,

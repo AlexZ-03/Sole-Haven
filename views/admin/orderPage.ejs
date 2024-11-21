@@ -1,0 +1,138 @@
+<%- include("../../views/partials/admin/header") %>
+<main class="right mt-5">
+    <header class="main-header navbar">
+        <h2 class="page-title">Order Details</h2>
+    </header>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Orders</h4>
+            </div>
+            <div class="right mt-5">
+                <!-- Wrap the table in a responsive container and center it -->
+                <div class="table-responsive mx-auto">
+                    <table class="table table-bordered text-center">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Order ID</th>
+                                <th>Customer Name</th>
+                                <th>Product(s)</th>
+                                <th>Total Amount</th>
+                                <th>Delivery Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% orders.forEach((order, index) => { %>
+                                <tr>
+                                    <td><%= index + 1 %></td>
+                                    <td><%= order._id %></td>
+                                    <td><%= order.customer ? order.customer.name : 'Customer not available' %></td>
+                                    <td>
+                                        <% order.orderedItems.forEach(item => { %>
+                                            <div><%= item.product ? item.product.productName : 'Product not available' %> x <%= item.quantity %></div>
+                                        <% }) %>
+                                    </td>
+                                    <td>
+                                        <%= order.finalAmount %>
+                                    </td>
+                                    <td>
+                                        <% if (order.address && order.address.address.length > 0) { %>
+                                            <%= order.address.address[0].landMark %>, 
+                                            <%= order.address.address[0].city %>, 
+                                            <%= order.address.address[0].pincode %>
+                                        <% } else { %>
+                                            Address not available
+                                        <% } %>
+                                    </td>                                                                    
+                                    <td>
+                                        <span class="badge <%= order.status === 'Completed' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-danger' %>">
+                                            <%= order.status %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (order.status !== 'Delivered' && order.status !== 'Canceled') { %>
+                                            <a href="/admin/orders/edit/<%= order._id %>" class="btn btn-sm btn-success">Edit</a>
+                                        <% } %>
+                                        <% if (order.status !== 'Canceled' && order.status !== 'Delivered') { %>
+                                            <a href="javascript:void(0)" class="btn btn-sm btn-danger" onclick="confirmCancel('<%= order._id %>')">Cancel</a>
+                                        <% } else {%>
+                                            <span class="text-danger">No actions available for order</span>
+                                        <% } %>
+                                    </td>                                                                       
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function confirmCancel(orderId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to cancel this order?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, cancel it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/orders/cancel/${orderId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Order Canceled',
+                            text: 'The order has been canceled successfully.',
+                            icon: 'success',
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Something Went Wrong',
+                            text: 'There was an error canceling the order.',
+                            icon: 'error',
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Something Went Wrong',
+                        text: 'There was an error canceling the order.',
+                        icon: 'error',
+                    });
+                });
+            }
+        });
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('statusUpdated') === 'true') {
+        Swal.fire({
+            title: 'Success!',
+            text: 'Order status updated successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+</script>
+
+
+
+<%- include("../../views/partials/admin/footer") %>

@@ -61,6 +61,9 @@ router.get('/deleteBanner', adminAuth, bannerController.deleteBanner);
 
 //Order management
 router.get('/orders', adminAuth, orderController.getOrderPage);
+router.get('/orders/cancel/:orderId', adminAuth, orderController.cancelOrder);
+router.get('/orders/edit/:id', adminAuth, orderController.getEditOrder);
+router.post('/orders/update/:id', adminAuth, orderController.editOrder);
 
 
 

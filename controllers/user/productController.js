@@ -358,6 +358,7 @@ const postCheckoutPage = async (req, res) => {
         });
 
         const newOrder = new Order({
+            customer: userId,
             orderedItems,
             totalPrice: totalAmount,
             finalAmount: totalAmount, 
@@ -394,6 +395,7 @@ const postCheckoutPage = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
 
 const getOrderConformed = (req, res) => {
     const { message, orderId } = req.query;

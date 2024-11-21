@@ -1,6 +1,7 @@
 const Banner = require('../../models/bannerSchema');
 const path = require('path');
 const fs = require('fs');
+const Order = require('../../models/orderSchema');
 
 const getBannerPage = async (req, res) => {
     try {
@@ -55,7 +56,6 @@ const deleteBanner = async (req, res) => {
         console.log("Error", error);
     }
 }
-
 
 
 

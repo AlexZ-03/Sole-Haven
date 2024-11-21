@@ -1,0 +1,89 @@
+<%- include("../../views/partials/admin/header") %>
+
+<main class="right mt-5">
+    <div class="container mt-5">
+        <h3>Edit Order</h3>
+
+        <form id="updateOrderForm" action="/admin/orders/update/<%= order._id %>" method="POST">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Information</h5>
+        
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">Order ID</label>
+                        <input type="text" class="form-control" id="orderId" value="<%= order.orderId %>" disabled>
+                    </div>
+        
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Order Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                            <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="Canceled" <%= order.status === 'Canceled' ? 'selected' : '' %>>Canceled</option>
+                        </select>
+                    </div>
+        
+                    <button type="button" id="submitBtn" class="btn btn-primary">Update Order Status</button>
+                </div>
+            </div>
+        </form>
+        
+
+        <!-- Order Items (example) -->
+        <h5 class="mt-4">Order Items</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% order.orderedItems.forEach(item => { %>
+                    <tr>
+                        <td><%= item.product.productName %></td>
+                        <td><%= item.quantity %></td>
+                        <td><%= item.price %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+
+        <!-- Total Price -->
+        <div class="mt-4">
+            <h5>Total Price: <%= order.totalPrice %></h5>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    document.getElementById('submitBtn').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to update the order status?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Updating...',
+                    text: 'Order status is being updated!',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    document.getElementById('updateOrderForm').submit();
+                });
+            }
+        });
+    });
+</script>
+
+<%- include("../../views/partials/admin/footer") %>
