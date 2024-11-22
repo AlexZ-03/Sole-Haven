@@ -19,12 +19,12 @@
 
         <div class="col-md-6">
             <select class="form-select" id="sortFilter" onchange="applySort(this.value)">
-                <option value="popularity">Sort by Popularity</option>
+                <!-- <option value="popularity">Sort by Popularity</option> -->
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="rating">Average Ratings</option>
+                <!-- <option value="rating">Average Ratings</option>
                 <option value="featured">Featured</option>
-                <option value="new">New Arrivals</option>
+                <option value="new">New Arrivals</option> -->
                 <option value="az">aA - zZ</option>
                 <option value="za">zZ - aA</option>
             </select>
@@ -67,10 +67,13 @@
         const nameB = b.querySelector('.card-title').innerText.toLowerCase();
         const priceA = parseFloat(a.querySelector('.card-text').innerText.replace('$', ''));
         const priceB = parseFloat(b.querySelector('.card-text').innerText.replace('$', ''));
+        const ratingA = parseFloat(a.querySelector('.card-text').innerText.replace('Rating: ', '').replace(' ⭐', '')) || 0;
+        const ratingB = parseFloat(b.querySelector('.card-text').innerText.replace('Rating: ', '').replace(' ⭐', '')) || 0;
 
         switch (sortBy) {
             case 'popularity':
-                return parseFloat(b.dataset.popularity) - parseFloat(a.dataset.popularity);
+                console.log(b.dataset.popularity)
+                return ratingB - ratingA;
             case 'price-low':
                 return priceA - priceB;
             case 'price-high':
@@ -82,7 +85,7 @@
             case 'featured':
                 return b.dataset.featured - a.dataset.featured;
             case 'new':
-                return b.dataset.newArrival - a.dataset.newArrival;
+            return b.dataset.newarrival - a.dataset.newarrival;
             default:
                 return 0;
         }

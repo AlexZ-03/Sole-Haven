@@ -26,6 +26,11 @@ router.get('/auth/google/callback', passport.authenticate('google', {failureRedi
 //login route
 router.get('/login', userController.loginPage);
 router.post('/login', userController.login);
+router.get('/forgotPassword', userController.getForgotPassword);
+router.post('/forgotPassword', userController.forgotPassword);
+router.post('/verify-forgot-otp', userController.verifyForgotPasswordOtp);
+router.get('/resetPassword', userController.getResetPassword);
+router.post('/resetPassword', userController.resetPassword);
 
 //home route
 router.get('/',userController.loadHomePage);

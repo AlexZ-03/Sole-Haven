@@ -86,31 +86,26 @@ const editOrder = async (req, res) => {
         const { status } = req.body;
         const orderId = req.params.id;
 
-        // Fetch the order to perform additional updates
         const order = await Order.findById(orderId).populate('orderedItems.product');
 
         if (!order) {
             return res.status(404).send('Order not found');
         }
 
-        // If the status is anything other than "Delivered," update the product quantities
         if (status !== 'Delivered') {
             for (const item of order.orderedItems) {
                 const product = item.product;
                 const quantityToRestore = item.quantity;
 
-                // Update the product stock
                 await Product.findByIdAndUpdate(product._id, {
                     $inc: { quantity: quantityToRestore }
                 });
             }
         }
 
-        // Update the order status
         order.status = status;
         await order.save();
 
-        // Redirect to orders page
         res.redirect('/admin/orders');
     } catch (err) {
         console.error('Error updating order:', err);

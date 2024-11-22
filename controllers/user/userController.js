@@ -239,6 +239,160 @@ const logout = async (req, res) => {
     }
 }
 
+const getForgotPassword = async (req, res) => {
+    try {
+        res.render('forgotPassword');
+    } catch (error) {
+        console.error("Error rendering forgot password page:", error);
+        res.redirect('/pageNotFound');
+    }
+};
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email: email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User with this email does not exist",
+            });
+        }
+
+        const otp = generateOpt();
+
+        req.session.resetOtp = otp;
+        req.session.resetEmail = email;
+
+        const emailSent = await sendVerificationEmail(email, otp);
+
+        if (!emailSent) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send OTP. Please try again later.",
+            });
+        }
+
+        console.log("Forgot Password OTP sent: ", otp);
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent to your email. Please verify it to reset your password.",
+        });
+    } catch (error) {
+        console.error("Error in forgot password process:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error. Please try again later.",
+        });
+    }
+};
+
+const verifyForgotPasswordOtp = async (req, res) => {
+    try {
+        const { otp } = req.body;
+
+        if (otp !== req.session.resetOtp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP. Please try again.",
+            });
+        }
+
+        const email = req.session.resetEmail;
+        req.session.resetOtp = null;
+
+        console.log("Forgot Password OTP verified for:", email);
+
+        return res.status(200).json({
+            success: true,
+            redirectUrl: "/resetPassword",
+        });
+    } catch (error) {
+        console.error("Error verifying forgot password OTP:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error. Please try again later.",
+        });
+    }
+};
+
+const getResetPassword = async (req, res) => {
+    try {
+        res.render('resetPassword');
+    } catch (error) {
+        console.error("Error rendering forgot password page:", error);
+        res.redirect('/pageNotFound');
+    }
+}
+
+const resetPassword = async (req, res) => {
+    try {
+        const { password } = req.body;
+
+        // Check if the email is stored in the session
+        const email = req.session.resetEmail;
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Session expired. Please restart the password reset process.',
+            });
+        }
+
+        // Validate the password
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password is required.',
+            });
+        }
+
+        const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordPattern.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Password must be at least 8 characters, include one letter, one number, and one special character.',
+            });
+        }
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.',
+            });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update the user's password in the database
+        user.password = hashedPassword;
+        await user.save();
+
+        // Clear sensitive session data
+        req.session.resetEmail = null;
+        req.session.resetOtp = null;
+
+        // Respond with success
+        return res.json({
+            success: true,
+            message: 'Password reset successfully.',
+        });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred. Please try again later.',
+        });
+    }
+};
+
+
 const getProductPage = async (req, res) => {
     try {
         const productId = req.query.id;
@@ -274,6 +428,10 @@ module.exports = {
     login,
     logout,
     getProductPage,
-    
+    getForgotPassword,
+    forgotPassword,
+    verifyForgotPasswordOtp,
+    getResetPassword,
+    resetPassword,
     
 }
