@@ -18,7 +18,7 @@ const addToCart = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        const totalPrice = product.salePrice * quantity;
+        const qtyToAdd = parseInt(quantity, 10) || 1;
 
         let cart = await Cart.findOne({ userId });
 
@@ -27,9 +27,9 @@ const addToCart = async (req, res) => {
                 userId,
                 items: [{
                     productId,
-                    quantity,
+                    quantity: qtyToAdd,
                     price: product.salePrice,
-                    totalPrice
+                    totalPrice: product.salePrice * qtyToAdd
                 }]
             });
             await User.findByIdAndUpdate(userId, {
@@ -39,14 +39,22 @@ const addToCart = async (req, res) => {
             const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
 
             if (itemIndex > -1) {
-                cart.items[itemIndex].quantity += quantity;
+                const currentQuantity = cart.items[itemIndex].quantity;
+
+                if (currentQuantity >= 5) {
+                    return res.json({
+                        success: false,
+                        message: 'Product already in the cart with maximum quantity (5)'
+                    });
+                }
+                cart.items[itemIndex].quantity = Math.min(currentQuantity + qtyToAdd, 5);
                 cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.salePrice;
             } else {
                 cart.items.push({
                     productId,
-                    quantity,
+                    quantity: qtyToAdd,
                     price: product.salePrice,
-                    totalPrice
+                    totalPrice: product.salePrice * qtyToAdd
                 });
             }
         }
@@ -61,7 +69,8 @@ const addToCart = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Something went wrong' });
     }
-}
+};
+
 
 
 const getCartPage = async (req, res) => {
@@ -86,7 +95,7 @@ const getCartPage = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Something went wrong' });
+        res.redirect('/pageNotFound');
     }
 };
 
@@ -178,17 +187,19 @@ const removeFromCart = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        const { search, sort } = req.query;
+        const { search, sort, page = 1 } = req.query; // Default page is 1
+        const limit = 12; // Products per page
+        const skip = (page - 1) * limit; // Calculate how many products to skip
+
         let filter = {};
         let sortCriteria = {};
 
+        // Apply search filter
         if (search) {
-            filter = {
-                ...filter,
-                productName: { $regex: search, $options: 'i' }
-            };
+            filter.productName = { $regex: search, $options: 'i' };
         }
 
+        // Apply sorting criteria
         switch (sort) {
             case 'popularity':
                 sortCriteria = { popularity: -1 };
@@ -212,26 +223,24 @@ const getShopPage = async (req, res) => {
                 sortCriteria = {};
         }
 
+        // Fetch products with pagination and sorting
+        const totalProducts = await Product.countDocuments(filter); // Total products for pagination
         const products = await Product.find(filter)
-        .sort(sortCriteria)
-        .populate({
-            path: 'reviews',
-            select: 'rating',
-        });
+            .sort(sortCriteria)
+            .skip(skip)
+            .limit(limit)
+            .populate({
+                path: 'reviews',
+                select: 'rating',
+            });
 
-        products.forEach(product => {
-            console.log('Product Reviews:', product.reviews); 
-        });
-
+        // Calculate average ratings
         const productsWithRatings = products.map(product => {
-            const reviews = product.reviews || [];  
-
+            const reviews = product.reviews || [];
             const ratings = reviews.map(review => review.rating);
             const averageRating = ratings.length > 0
                 ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
                 : null;
-
-            console.log('Average Rating:', averageRating);
 
             return {
                 ...product.toObject(),
@@ -239,16 +248,23 @@ const getShopPage = async (req, res) => {
             };
         });
 
+        // Calculate total pages
+        const totalPages = Math.ceil(totalProducts / limit);
+
         res.render('shop', {
             title: 'Shop',
             products: productsWithRatings,
             search,
+            sort,
+            currentPage: parseInt(page, 10),
+            totalPages,
         });
     } catch (error) {
         console.error('Error fetching shop page:', error);
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
+
 
 const submitReview = async (req, res) => {
     try {

@@ -20,13 +20,13 @@
                                 <th>Customer Name</th>
                                 <th>Product(s)</th>
                                 <th>Total Amount</th>
-                                <th>Delivery Address</th>
+                                <!-- <th>Delivery Address</th> -->
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% orders.forEach((order, index) => { %>
+                            <% orders.slice().reverse().forEach((order, index) => { %>
                                 <tr>
                                     <td><%= index + 1 %></td>
                                     <td><%= order._id %></td>
@@ -39,7 +39,7 @@
                                     <td>
                                         <%= order.finalAmount %>
                                     </td>
-                                    <td>
+                                    <!-- <td>
                                         <% if (order.address && order.address.address.length > 0) { %>
                                             <%= order.address.address[0].landMark %>, 
                                             <%= order.address.address[0].city %>, 
@@ -47,9 +47,9 @@
                                         <% } else { %>
                                             Address not available
                                         <% } %>
-                                    </td>                                                                    
+                                    </td>                                                                     -->
                                     <td>
-                                        <span class="badge <%= order.status === 'Completed' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-danger' %>">
+                                        <span class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-danger' %>">
                                             <%= order.status %>
                                         </span>
                                     </td>

@@ -129,7 +129,7 @@
             </div>
         
             <% if (orders.length > 0) { %>
-                <% orders.forEach(function(order) { %>
+                <% orders.slice().reverse().forEach(function(order) { %>
                     <table class="order-table">
                         <thead>
                             <tr>

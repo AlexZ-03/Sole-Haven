@@ -278,7 +278,43 @@
                                         <button type="submit" class="btn btn-primary">Submit Review</button>
                                     </div>
                                 </form>
-                            </div>                                                       
+                            </div>
+                            <div class="related-products mt-5">
+                                <h4 class="section-title style-1 mb-30">Related Products</h4>
+                                <div class="row">
+                                    <% if (relatedProducts.length) { %>
+                                        <% relatedProducts.forEach(relatedProduct => { %>
+                                            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                                <div class="product-card">
+                                                    <a href="/productDetails/<%= relatedProduct._id %>" class="product-img-wrap">
+                                                        <img 
+                                                            src="/uploads/product-images/<%= relatedProduct.productImage[0] %>" 
+                                                            alt="<%= relatedProduct.productName %>" 
+                                                            class="img-fluid"
+                                                        >
+                                                    </a>
+                                                    <div class="product-info mt-2">
+                                                        <h5 class="product-name">
+                                                            <a href="/productDetails/<%= relatedProduct._id %>">
+                                                                <%= relatedProduct.productName %>
+                                                            </a>
+                                                        </h5>
+                                                        <div class="product-price">
+                                                            <span class="text-brand">₹<%= relatedProduct.salePrice %></span>
+                                                            <% if (relatedProduct.salePrice < relatedProduct.regularPrice) { %>
+                                                                <span class="old-price text-muted">₹<%= relatedProduct.regularPrice %></span>
+                                                                <span class="save-price">(<%= relatedProduct.productOffer %>% Off)</span>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <p>No related products found.</p>
+                                    <% } %>
+                                </div>
+                            </div>                                                                                
                     </div>
                 </div>
             </div>
@@ -337,7 +373,21 @@
                         window.location.href = '/cart';
                     });
                 } else {
-                    Swal.fire("Error", "Something went wrong!", "error");
+                    if (data.message === 'Product already in the cart with maximum quantity (5)') {
+                        Swal.fire({
+                            title: "Limit Reached",
+                            text: "This product is already in your cart with the maximum quantity (5).",
+                            icon: "warning",
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.message || "Something went wrong!",
+                            icon: "error"
+                        });
+                    }
                 }
             })
             .catch(error => {

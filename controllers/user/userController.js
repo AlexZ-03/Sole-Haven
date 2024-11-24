@@ -403,11 +403,15 @@ const getProductPage = async (req, res) => {
                 path: 'reviews',
                 populate: { path: 'userId', select: 'name' }
             });
+        const relatedProducts = await Product.find({ 
+            category: product.category._id, 
+            _id: { $ne: product._id }
+        }).limit(4);
     
         if (!product) {
           return res.status(404).send('Product not found');
         }
-        res.render('productDetails', { product });
+        res.render('productDetails', { product , relatedProducts});
       } catch (error) {
         console.error('Error fetching product details:', error);
         res.status(500).send('Server Error');

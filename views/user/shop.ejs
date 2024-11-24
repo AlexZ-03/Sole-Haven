@@ -1,11 +1,54 @@
 <%- include("../../views/partials/user/header") %>
 
+<style>
+.pagination .page-link {
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #343a40;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #e2e6ea;
+    color: #343a40; 
+}
+
+.pagination .active .page-link {
+    background-color: #088178; 
+    border: 1px solid #046963; 
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #6c757d;
+    pointer-events: none;
+}
+
+.page-item .btn-primary {
+    background-color: #088178;
+    border: 1px solid #046963; 
+    color: white;
+    border-radius: 5px;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.page-item .btn-primary:hover {
+    background-color: #046963; 
+    color: white; 
+}
+
+</style>
+
 <div class="container mt-4">
 
-    <!-- Search and Sort -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <!-- Search Bar -->
             <form action="/shop" method="GET">
                 <input 
                     type="text" 
@@ -14,20 +57,19 @@
                     placeholder="Search for products..."
                     value="<%= typeof search !== 'undefined' ? search : '' %>"
                 >
-            </form>
+                <input type="hidden" name="sort" value="<%= sort || '' %>">
+            </form>            
         </div>
 
         <div class="col-md-6">
             <select class="form-select" id="sortFilter" onchange="applySort(this.value)">
-                <!-- <option value="popularity">Sort by Popularity</option> -->
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <!-- <option value="rating">Average Ratings</option>
-                <option value="featured">Featured</option>
-                <option value="new">New Arrivals</option> -->
-                <option value="az">aA - zZ</option>
-                <option value="za">zZ - aA</option>
-            </select>
+                <option value="popularity" <%= sort === 'popularity' ? 'selected' : '' %>>Sort by Popularity</option>
+                <option value="price-low" <%= sort === 'price-low' ? 'selected' : '' %>>Price: Low to High</option>
+                <option value="price-high" <%= sort === 'price-high' ? 'selected' : '' %>>Price: High to Low</option>
+                <option value="new" <%= sort === 'new' ? 'selected' : '' %>>New Arrivals</option>
+                <option value="az" <%= sort === 'az' ? 'selected' : '' %>>aA - zZ</option>
+                <option value="za" <%= sort === 'za' ? 'selected' : '' %>>zZ - aA</option>
+            </select>            
         </div>
     </div>
 
@@ -35,12 +77,13 @@
         <% products.forEach(product => { %>
             <div class="col-md-4 mb-4">
                 <div class="card">
-                    <a href="/productDetails?id=<%=product._id%>">
-                    <img 
-                        src="/uploads/product-images/<%=product.productImage[0] %>" 
-                        class="card-img-top" 
-                        alt="<%= product.productName %>"
-                    ></a>
+                    <a href="/productDetails?id=<%= product._id %>">
+                        <img 
+                            src="/uploads/product-images/<%= product.productImage[0] %>" 
+                            class="card-img-top" 
+                            alt="<%= product.productName %>"
+                        >
+                    </a>
                     <div class="card-body">
                         <h5 class="card-title"><%= product.productName %></h5>
                         <p class="card-text">$<%= product.salePrice %></p>
@@ -55,53 +98,49 @@
             </div>
         <% }) %>
     </div>
+
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                <a 
+                    class="page-link btn-primary" 
+                    href="<%= currentPage > 1 ? `/shop?page=${currentPage - 1}&search=${search || ''}&sort=${sort || ''}` : '#' %>"
+                >
+                    Previous
+                </a>
+            </li>
+    
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a 
+                        class="page-link" 
+                        href="/shop?page=<%= i %>&search=<%= search || '' %>&sort=<%= sort || '' %>"
+                    >
+                        <%= i %>
+                    </a>
+                </li>
+            <% } %>
+    
+            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                <a 
+                    class="page-link btn-primary" 
+                    href="<%= currentPage < totalPages ? `/shop?page=${currentPage + 1}&search=${search || ''}&sort=${sort || ''}` : '#' %>"
+                >
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>    
+          
 </div>
 
 <script>
     function applySort(sortBy) {
-    const products = [...document.querySelectorAll('.card')];
-    const grid = document.getElementById('productGrid');
-
-    products.sort((a, b) => {
-        const nameA = a.querySelector('.card-title').innerText.toLowerCase();
-        const nameB = b.querySelector('.card-title').innerText.toLowerCase();
-        const priceA = parseFloat(a.querySelector('.card-text').innerText.replace('$', ''));
-        const priceB = parseFloat(b.querySelector('.card-text').innerText.replace('$', ''));
-        const ratingA = parseFloat(a.querySelector('.card-text').innerText.replace('Rating: ', '').replace(' ⭐', '')) || 0;
-        const ratingB = parseFloat(b.querySelector('.card-text').innerText.replace('Rating: ', '').replace(' ⭐', '')) || 0;
-
-        switch (sortBy) {
-            case 'popularity':
-                console.log(b.dataset.popularity)
-                return ratingB - ratingA;
-            case 'price-low':
-                return priceA - priceB;
-            case 'price-high':
-                return priceB - priceA;
-            case 'az':
-                return nameA.localeCompare(nameB);
-            case 'za':
-                return nameB.localeCompare(nameA);
-            case 'featured':
-                return b.dataset.featured - a.dataset.featured;
-            case 'new':
-            return b.dataset.newarrival - a.dataset.newarrival;
-            default:
-                return 0;
-        }
-    });
-
-    while (grid.firstChild) {
-        grid.removeChild(grid.firstChild);
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', sortBy);
+        window.location.href = url.toString();
     }
 
-    products.forEach(product => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'col-md-4 mb-4'; 
-        wrapper.appendChild(product);
-        grid.appendChild(wrapper);
-    });
-}
 </script>
 
 <%- include("../../views/partials/user/footer") %>
