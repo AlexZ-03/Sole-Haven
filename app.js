@@ -9,6 +9,10 @@ const adminRouter = require('./routes/adminRouter');
 const passport = require('./config/passport');
 const { setUser } = require('./middlewares/auth');
 db();
+const logger = require('./middlewares/logger');
+
+// app.use(logger);
+
 
 
 app.use(express.json());

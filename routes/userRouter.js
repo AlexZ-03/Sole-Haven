@@ -55,6 +55,9 @@ router.get('/shop', productController.getShopPage);
 router.get('/checkout', userAuth, productController.getCheckoutPage);
 router.post('/checkout', userAuth, productController.postCheckoutPage);
 router.get('/orderConformed', userAuth, productController.getOrderConformed);
+router.get('/razorpay', userAuth, productController.getRazorpay);
+router.post('/paymentSuccess', userAuth, productController.razorpaySuccess);
+router.post('/paymentFailed', userAuth, productController.razorpayFailure);
 
 //Product management
 router.get('/productDetails', userController.getProductPage);

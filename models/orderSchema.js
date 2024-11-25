@@ -62,7 +62,22 @@ const orderSchema = new Schema({
     couponApplied: {
         type: Boolean,
         default: false
-    }
+    },
+    razorpayOrderId: {
+        type: String,
+        required: false
+    },
+    paymentStatus: {
+        type: String,
+        required: true,
+        enum: ['Pending', 'Paid'],
+        default: 'Pending'
+    },
+    paymentMethod: {
+        type: String,
+        required: true,
+        enum: ['COD', 'Razorpay']
+    }   
 });
 
 const Order = mongoose.model('Order', orderSchema);
