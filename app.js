@@ -10,6 +10,8 @@ const passport = require('./config/passport');
 const { setUser } = require('./middlewares/auth');
 db();
 const logger = require('./middlewares/logger');
+const cluster = require('cluster');
+const os = require('os');
 
 // app.use(logger);
 

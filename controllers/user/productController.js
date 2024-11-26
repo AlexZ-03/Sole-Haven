@@ -420,13 +420,27 @@ const postCheckoutPage = async (req, res) => {
                 finalAmount: totalAmount,
                 address: addressId,
                 invoiceDate: new Date(),
-                status: 'Processing',
+                status: 'Pending',
                 createdOn: new Date(),
                 couponApplied: false,
                 paymentMethod: 'COD'
             });
 
             await newOrder.save();
+
+            await Promise.all(orderedItems.map(async (item) => {
+                await Product.findByIdAndUpdate(
+                    item.product._id,
+                    { $inc: { quantity: -item.quantity } },
+                    { new: true }
+                );
+            }));
+
+            await User.findByIdAndUpdate(
+                userId,
+                { $push: { orderHistory: newOrder._id } },
+                { new: true }
+            );
 
             await Cart.updateOne({ userId }, { $set: { items: [] } });
 
@@ -488,7 +502,20 @@ const razorpaySuccess = async (req, res) => {
             const userId = order.customer;
             await Cart.updateOne({ userId }, { $set: { items: [] } });
 
-            // Send response to frontend
+            await User.findByIdAndUpdate(
+                userId,
+                { $push: { orderHistory: order._id } },
+                { new: true }
+            );
+
+            await Promise.all(order.orderedItems.map(async (item) => {
+                await Product.findByIdAndUpdate(
+                    item.product._id,
+                    { $inc: { quantity: -item.quantity } },
+                    { new: true }
+                );
+            }));
+
             return res.json({ success: true, orderId: order._id });
         } else {
             return res.status(400).json({ success: false, message: 'Payment failed' });
@@ -499,17 +526,15 @@ const razorpaySuccess = async (req, res) => {
     }
 };
 
-// Handle Razorpay Payment Failure
 const razorpayFailure = async (req, res) => {
     try {
         const { orderId } = req.body;
         console.log('Failed Order ID:', orderId);
 
-        // Delete the order if payment failed
         const order = await Order.findOne({ orderId: orderId });
 
         if (order) {
-            await Order.deleteOne({ orderId: orderId }); // Delete the failed order
+            await Order.deleteOne({ orderId: orderId });
         }
 
         return res.json({ success: true });

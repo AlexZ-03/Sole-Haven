@@ -134,6 +134,10 @@
                         <thead>
                             <tr>
                                 <th>Order ID</th>
+                                <% if(order.status !== 'Canceled'){ %>
+                                <th>Payment Status</th>
+                                <% } %>
+                                <th>Payment Method</th>
                                 <th>Status</th>
                                 <th>Total Price</th>
                                 <th>Actions</th>
@@ -142,6 +146,10 @@
                         <tbody>
                             <tr>
                                 <td><%= order.orderId %></td>
+                                <% if(order.status !== 'Canceled'){ %>
+                                <td><%= order.paymentStatus %></td>
+                                <% } %>
+                                <td><%= order.paymentMethod %></td>
                                 <td><%= order.status %></td>
                                 <td>₹<%= order.total %></td>
                                 <td>
@@ -160,7 +168,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="4">
+                                <td colspan="6">
                                     <% if (order.orderedItems && Array.isArray(order.orderedItems)) { %>
                                         <table class="order-item-table">
                                             <thead>

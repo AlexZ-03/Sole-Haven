@@ -50,14 +50,28 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = '/orderConfirmed/' + data.orderId; // Redirect to order confirmation page
+                        window.location.href = `/orderConformed?orderId=${data.orderId}`;
                     } else {
-                        window.location.href = '/'; // If error occurs, redirect to home
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'We encountered an issue processing your order. Please contact support.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.href = '/';
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    window.location.href = '/'; // In case of error
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'There was an issue completing your payment. Please try again later.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.href = '/';
+                    });
                 });
             });
         },
@@ -78,7 +92,6 @@
     };
 
     rzp.on('payment.failed', function (response) {
-        // Payment failed: Delete order and show failure message
         Swal.fire({
             title: 'Payment Failed!',
             text: 'Something went wrong with your payment. Please try again.',
@@ -95,11 +108,11 @@
                 })
             })
             .then(() => {
-                window.location.href = '/'; // Redirect to home page after order deletion
+                window.location.href = '/';
             })
             .catch(error => {
                 console.error('Error:', error);
-                window.location.href = '/'; // If error occurs, redirect to home
+                window.location.href = '/';
             });
         });
     });

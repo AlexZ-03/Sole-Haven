@@ -26,19 +26,24 @@ const userProfile = async (req, res) => {
 const getOrders = async (req, res) => {
     try {
         const userId = req.session.user;
+
         if (!userId) {
             return res.redirect('/login');
         }
 
-        const userData = await User.findById(userId)
-        .populate({
+        const userData = await User.findById(userId).populate({
             path: 'orderHistory',
-            populate: {
-                path: 'orderedItems.product',
-                model: 'Product'
-            }
+            populate: [
+                {
+                    path: 'orderedItems.product',
+                    model: 'Product'
+                },
+                {
+                    path: 'address',
+                    model: 'Address'
+                }
+            ]
         });
-
 
         if (!userData) {
             return res.redirect('/login');
@@ -47,27 +52,28 @@ const getOrders = async (req, res) => {
         const cancelableStatuses = ['Pending', 'Processing', 'Shipped'];
         const returnableStatuses = ['Delivered'];
 
-        const orders = userData.orderHistory.map(order => {
-            return {
-                orderId: order.orderId,
-                status: order.status,
-                total: order.totalPrice,
-                orderedItems: order.orderedItems.map(item => {
-                    console.log('Product Name:', item.product.productName);
-                    console.log('Product Image:', item.product.productImage[0]);
+        const orders = userData.orderHistory.map(order => ({
+            orderId: order.orderId,
+            status: order.status,
+            total: order.totalPrice,
+            discount: order.discount,
+            finalAmount: order.finalAmount,
+            invoiceDate: order.invoiceDate,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            orderedItems: order.orderedItems.map(item => ({
+                productName: item.product ? item.product.productName : null,
+                productImage: item.product && item.product.productImage ? item.product.productImage[0] : null,
+                productId: item.product ? item.product._id : null,
+                price: item.price,
+                quantity: item.quantity
+            })),
+            address: order.address ? `${order.address.street}, ${order.address.city}, ${order.address.state}` : 'Address not available',
+            canCancel: cancelableStatuses.includes(order.status),
+            canReturn: returnableStatuses.includes(order.status)
+        }));
 
-                    return {
-                        productName: item.product.productName,
-                        productImage: item.product.productImage[0],
-                        productId: item.product._id,
-                        price: item.product.salePrice || item.product.regularPrice,
-                        quantity: item.quantity
-                    };
-                }),
-                canCancel: cancelableStatuses.includes(order.status),
-                canReturn: returnableStatuses.includes(order.status)
-            };
-        });        
+        console.log(orders);
 
         res.render('orders', {
             user: userData,

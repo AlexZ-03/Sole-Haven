@@ -7,7 +7,7 @@ const orderSchema = new Schema({
     orderId : {
         type: String,
         default: () => uuidv4(),
-        unquie: true
+        unique: true
     },
     customer: {
         type: Schema.Types.ObjectId,
@@ -77,7 +77,13 @@ const orderSchema = new Schema({
         type: String,
         required: true,
         enum: ['COD', 'Razorpay']
-    }   
+    },
+    returnStatus : {
+        type: String,
+        required: true,
+        enum: ['Not Requested', 'Requested', 'Approved', 'Rejected'],
+        default: 'Not Requested'
+    }
 });
 
 const Order = mongoose.model('Order', orderSchema);
