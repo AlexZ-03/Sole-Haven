@@ -140,7 +140,11 @@
                                 <th>Payment Method</th>
                                 <th>Status</th>
                                 <th>Total Price</th>
+                                <% if(order.status === 'Canceled' || order.canReturn || order.canCancel) {%>
                                 <th>Actions</th>
+                                <% } else {%>
+                                    <th>Return Status</th>
+                                <% } %>
                             </tr>
                         </thead>
                         <tbody>
@@ -162,8 +166,11 @@
                                             <% } %>
                                             <% if (order.canReturn) { %>
                                                 <button class="return-order-btn">Return Product</button>
-                                            <% } %>
+                                            <% }%>
                                         <% } %>
+                                        <% if(order.status === 'Delivered' && !order.canReturn && !order.canCancel) {%>
+                                            <span><%= order.returnStatus%></span>
+                                        <% } %> 
                                     </div>
                                 </td>
                             </tr>
@@ -218,48 +225,49 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const cancelButtons = document.querySelectorAll('.cancel-order-btn');
-        
-        cancelButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, cancel it!',
-                    cancelButtonText: 'No, keep it'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const orderId = this.closest('tr').querySelector('td').textContent;
-                        
-                        fetch(`/cancel-order/${orderId}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ orderId: orderId })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Canceled!', 'Your order has been canceled.', 'success')
-                                  .then(() => {
-                                      window.location.reload();
-                                  });
-                            } else {
-                                Swal.fire('Error', 'There was an issue canceling the order.', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire('Error', 'There was an issue with the server.', 'error');
-                        });
-                    }
-                });
+   document.addEventListener('DOMContentLoaded', function() {
+    const returnButtons = document.querySelectorAll('.return-order-btn');
+    
+    returnButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.closest('tr').querySelector('td').textContent;
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You are requesting to return this order.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, request return!',
+                cancelButtonText: 'No, keep it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/return-order/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Requested!', 'Your order return has been requested.', 'success')
+                            .then(() => {
+                                const returnBtn = this;
+                                returnBtn.textContent = 'Return Status: Requested';
+                                returnBtn.classList.remove('return-order-btn');
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'There was an issue with the server.', 'error');
+                    });
+                }
             });
         });
     });
+});
 </script>
 
 </html>

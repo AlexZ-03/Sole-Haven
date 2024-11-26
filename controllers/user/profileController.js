@@ -70,7 +70,8 @@ const getOrders = async (req, res) => {
             })),
             address: order.address ? `${order.address.street}, ${order.address.city}, ${order.address.state}` : 'Address not available',
             canCancel: cancelableStatuses.includes(order.status),
-            canReturn: returnableStatuses.includes(order.status)
+            canReturn: returnableStatuses.includes(order.status) && order.returnStatus === 'Not Requested',
+            returnStatus: order.returnStatus
         }));
 
         console.log(orders);
@@ -122,6 +123,30 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+const returnOrder = async(req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        const order = await Orders.findOne({ orderId: orderId, customer: req.user._id });
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.returnStatus !== 'Not Requested') {
+            return res.status(400).json({ success: false, message: 'Return already requested or processed' });
+        }
+
+        order.returnStatus = 'Requested';
+        await order.save();
+
+        res.json({ success: true, message: 'Order return requested' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+}
 
 const editProfile = async (req, res) => {
     try {
@@ -256,4 +281,5 @@ module.exports = {
     addAddress,
     deleteAddress,
     cancelOrder,
+    returnOrder,
 }

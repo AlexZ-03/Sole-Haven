@@ -44,6 +44,7 @@ router.post('/addAddress', userAuth, profileController.addAddress);
 router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);
 router.get('/orders', userAuth, profileController.getOrders);
 router.post('/cancel-order/:orderId', userAuth, profileController.cancelOrder);
+router.post('/return-order/:orderId', userAuth, profileController.returnOrder);
 
 
 router.get('/cart', userAuth, productController.getCartPage);
