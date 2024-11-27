@@ -1,0 +1,31 @@
+<%- include("../../views/partials/admin/header") %>
+
+<main class="right mt-5">
+    <h2 class="text-center my-3">Return Orders</h2>
+    <div class="container my-4">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User Name</th>
+                    <th>Return Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% returnOrders.forEach(order => { %>
+                    <tr>
+                        <td><%= order.orderId %></td>
+                        <td><%= order.customer.name %></td>
+                        <td><%= order.returnStatus %></td>
+                        <td>
+                            <a href="/admin/returnOrders/<%= order._id %>/update" class="btn btn-primary btn-sm">Update</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<%- include("../../views/partials/admin/footer") %>

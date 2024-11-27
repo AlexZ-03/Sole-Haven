@@ -164,7 +164,7 @@
                                             <% if (order.canCancel) { %>
                                                 <button class="cancel-order-btn">Cancel Order</button>
                                             <% } %>
-                                            <% if (order.canReturn) { %>
+                                            <% if (order.canReturn && order.returnStatus == 'Not Requested') { %>
                                                 <button class="return-order-btn">Return Product</button>
                                             <% }%>
                                         <% } %>

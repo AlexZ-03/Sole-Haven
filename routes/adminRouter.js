@@ -64,6 +64,10 @@ router.get('/orders', adminAuth, orderController.getOrderPage);
 router.get('/orders/cancel/:orderId', adminAuth, orderController.cancelOrder);
 router.get('/orders/edit/:id', adminAuth, orderController.getEditOrder);
 router.post('/orders/update/:id', adminAuth, orderController.editOrder);
+router.get('/returnOrders', adminAuth, orderController.getReturnOrderPage);
+router.post('/returnOrders/:id/update', adminAuth, orderController.updateReturnStatus);
+router.get('/returnOrders/:id/update', adminAuth, orderController.renderUpdateReturnStatusPage);
+
 
 
 

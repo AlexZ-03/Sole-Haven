@@ -6,6 +6,8 @@ const User = require("../../models/userSchema");
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
+const nodemailer = require('nodemailer');
+
 
 
 const getOrderPage = async (req, res) => {
@@ -113,6 +115,123 @@ const editOrder = async (req, res) => {
     }
 };
 
+const getReturnOrderPage = async (req, res) => {
+    try {
+        const returnOrders = await Order.find({ returnStatus: { $ne: 'Not Requested' } })
+            .populate({
+                path: 'customer',
+                select: 'name email'
+            })
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName'
+            })
+            .populate({
+                path: 'address',
+                select: 'address',
+                match: { 'address.isDeleted': false },
+                options: { limit: 1 }
+            })
+            .exec();
+
+            console.log(returnOrders)
+
+        res.render('returnOrder', { returnOrders });
+    } catch (error) {
+        console.error('Error fetching return orders:', error);
+        res.status(500).send('Error fetching return orders');
+    }
+};
+
+const renderUpdateReturnStatusPage = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const order = await Order.findById(id).populate('customer').populate('orderedItems.product');
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        res.render('changeReturnStatus', { order });
+    } catch (error) {
+        console.error('Error rendering update return status page:', error);
+        res.status(500).send('Error rendering update return status page');
+    }
+};
+
+
+const updateReturnStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { returnStatus, reason } = req.body;
+
+        const order = await Order.findById(id).populate('customer').populate('orderedItems.product');
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+        order.returnStatus = returnStatus;
+        await order.save();
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.NODEMAILER_EMAIL,
+                pass: process.env.NODEMAILER_PASSWORD,
+            },
+        });
+
+        const customerEmail = order.customer.email;
+        const customerName = order.customer.name;
+        const productNames = order.orderedItems.map(item => item.product.productName).join(', ');
+
+        let subject, text;
+
+        if (returnStatus === 'Approved') {
+            subject = 'Your Return Request Has Been Approved';
+            text = `Dear ${customerName},
+
+We are pleased to inform you that your return request for ${productNames} has been approved. Our team will arrange to collect the item from your provided address within 1 week.
+
+Please ensure the following to facilitate a smooth pickup process:
+- The item should be in its original condition, including all accessories, tags, and packaging.
+- Keep the product ready for pickup during business hours.
+
+If you have any specific instructions or need to reschedule the pickup, please feel free to contact us at support@soleheaven.com.
+
+Thank you for choosing Sole Heaven. We value your trust and look forward to serving you again.
+
+Best regards,
+Customer Support Team
+Sole Heaven`;
+        } else if (returnStatus === 'Rejected') {
+            subject = 'Your Return Request Has Been Rejected';
+            text = `Dear ${customerName},
+
+We regret to inform you that your return request for ${productNames} has been rejected due to the following reason:
+${reason}
+
+If you have any further concerns, please contact us at support@soleheaven.com.
+
+Best regards,
+Customer Support Team
+Sole Heaven`;
+        }
+
+        await transporter.sendMail({
+            from: process.env.NODEMAILER_EMAIL,
+            to: customerEmail,
+            subject,
+            text,
+        });
+
+        res.redirect('/admin/returnOrders');
+    } catch (error) {
+        console.error('Error updating return status:', error);
+        res.status(500).send('Error updating return status');
+    }
+};
+
 
 
 
@@ -121,4 +240,7 @@ module.exports = {
     cancelOrder,
     getEditOrder,
     editOrder,
+    getReturnOrderPage,
+    updateReturnStatus,
+    renderUpdateReturnStatusPage,
 }

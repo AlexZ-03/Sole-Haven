@@ -1,0 +1,36 @@
+<%- include("../../views/partials/admin/header") %>
+
+<main class="right mt-5">
+    <h2 class="text-center my-3">Update Return Status</h2>
+    <div class="container">
+        <form action="/admin/returnOrders/<%= order._id %>/update" method="POST">
+            <div class="mb-3">
+                <label for="returnStatus" class="form-label">Return Status</label>
+                <select id="returnStatus" name="returnStatus" class="form-select" onchange="toggleReason(this)">
+                    <option value="Requested">Requested</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="mb-3" id="reasonField" style="display: none;">
+                <label for="reason" class="form-label">Reason for Rejection</label>
+                <textarea id="reason" name="reason" class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Update & Notify User</button>
+        </form>
+    </div>
+</main>
+
+<script>
+    function toggleReason(select) {
+        const reasonField = document.getElementById('reasonField');
+        if (select.value === 'Rejected') {
+            reasonField.style.display = 'block';
+        } else {
+            reasonField.style.display = 'none';
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<%- include("../../views/partials/admin/footer") %>
