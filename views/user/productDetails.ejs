@@ -183,7 +183,21 @@
                                                     </a>
                                                 </li>
                                             </ul>
-                                        </div>                                     
+                                        </div>   
+                                        <div class="attr-detail attr-size mb-15">
+                                            <strong class="mr-10">Size</strong>
+                                            <ul class="list-filter size-filter">
+                                                <% product.sizes.forEach((sizeObj) => { %>
+                                                    <% if (sizeObj.quantity > 0) { %>
+                                                        <li>
+                                                            <a href="#" data-size="<%= sizeObj.size %>" class="size-option">
+                                                                <span><%= sizeObj.size %></span>
+                                                            </a>
+                                                        </li>
+                                                    <% } %>
+                                                <% }) %>
+                                            </ul>
+                                        </div>                                                                                                                                                                                    
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
                                             <div class="detail-qty border radius">
@@ -358,43 +372,70 @@
             zoomContainer.style.display = 'none';
         });
 
-        function addToCart(productId, quantity) {
-        fetch(`/addTocart?productId=${productId}&quantity=${quantity}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: "Added to Cart",
-                        text: data.message,
-                        icon: "success",
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.href = '/cart';
-                    });
-                } else {
-                    if (data.message === 'Product already in the cart with maximum quantity (5)') {
+        let selectedSize = null;
+
+
+        document.querySelectorAll('.size-option').forEach(option => {
+            option.addEventListener('click', function (event) {
+                event.preventDefault();
+                const size = this.getAttribute('data-size');
+
+                document.querySelectorAll('.size-option').forEach(opt => opt.closest('li').classList.remove('active'));
+                this.closest('li').classList.add('active');
+
+                selectedSize = size;
+            });
+        });
+
+        function addToCart(productId) {
+            const quantity = document.querySelector('.qty-val').textContent;
+
+            if (!selectedSize) {
+                Swal.fire({
+                    title: "Error",
+                    text: "Please select a size.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            fetch(`/addTocart?productId=${productId}&quantity=${quantity}&size=${selectedSize}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                         Swal.fire({
-                            title: "Limit Reached",
-                            text: "This product is already in your cart with the maximum quantity (5).",
-                            icon: "warning",
-                            timer: 2000,
+                            title: "Added to Cart",
+                            text: data.message,
+                            icon: "success",
+                            timer: 1500,
                             showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/cart';
                         });
                     } else {
-                        Swal.fire({
-                            title: "Error",
-                            text: data.message || "Something went wrong!",
-                            icon: "error"
-                        });
+                        if (data.message === 'Product already in the cart with maximum quantity (5)') {
+                            Swal.fire({
+                                title: "Limit Reached",
+                                text: "This product is already in your cart with the maximum quantity (5).",
+                                icon: "warning",
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                title: "Error",
+                                text: data.message || "Something went wrong!",
+                                icon: "error"
+                            });
+                        }
                     }
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                Swal.fire("Error", "There was an issue with adding the product to the cart.", "error");
-            });
-    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire("Error", "There was an issue with adding the product to the cart.", "error");
+                });
+        }
+
 
     </script>
 

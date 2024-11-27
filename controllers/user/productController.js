@@ -10,48 +10,58 @@ const Razorpay = require('razorpay');
 const addToCart = async (req, res) => {
     try {
         const userId = req.session.user._id;
-        const { productId, quantity } = req.query;
+        const { productId, quantity, size } = req.query;
+
+        console.log(size)
 
         const product = await Product.findById(productId);
-
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
 
+        const selectedSize = product.sizes.find(s => s.size === parseInt(size));
+        if (!selectedSize) {
+            return res.status(400).json({ message: 'Selected size not available' });
+        }
+
         const qtyToAdd = parseInt(quantity, 10) || 1;
+        if (selectedSize.quantity < qtyToAdd) {
+            return res.status(400).json({ message: 'Not enough stock for the selected size' });
+        }
 
         let cart = await Cart.findOne({ userId });
-
         if (!cart) {
             cart = new Cart({
                 userId,
                 items: [{
                     productId,
+                    size,
                     quantity: qtyToAdd,
                     price: product.salePrice,
                     totalPrice: product.salePrice * qtyToAdd
                 }]
             });
+            await cart.save();
             await User.findByIdAndUpdate(userId, {
                 $push: { cart: cart._id }
             });
         } else {
-            const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
-
+            const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId && item.size === size);
             if (itemIndex > -1) {
                 const currentQuantity = cart.items[itemIndex].quantity;
-
                 if (currentQuantity >= 5) {
                     return res.json({
                         success: false,
                         message: 'Product already in the cart with maximum quantity (5)'
                     });
                 }
+
                 cart.items[itemIndex].quantity = Math.min(currentQuantity + qtyToAdd, 5);
                 cart.items[itemIndex].totalPrice = cart.items[itemIndex].quantity * product.salePrice;
             } else {
                 cart.items.push({
                     productId,
+                    size,
                     quantity: qtyToAdd,
                     price: product.salePrice,
                     totalPrice: product.salePrice * qtyToAdd
@@ -60,6 +70,7 @@ const addToCart = async (req, res) => {
         }
 
         await cart.save();
+        console.log(cart)
         res.json({
             success: true,
             message: 'Product added to cart successfully',
@@ -70,6 +81,8 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
+
+
 
 
 

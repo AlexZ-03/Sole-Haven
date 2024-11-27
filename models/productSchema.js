@@ -32,10 +32,20 @@ const productSchema = new Schema({
         type: Number,
         default: 0
     },
-    quantity: {
-        type: Number,
-        default: 0
-    },
+    sizes: [
+        {
+            size: {
+                type: Number,
+                enum: [6, 7, 8, 9],
+                required: true
+            },
+            quantity: {
+                type: Number,
+                required: true,
+                default: 0
+            }
+        }
+    ],
     color: {
         type: String,
         required: true

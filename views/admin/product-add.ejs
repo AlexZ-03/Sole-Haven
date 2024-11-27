@@ -27,7 +27,7 @@
                    <h2 class="content-title">Add New Product</h2>
                </div>
            </div>
-           <div class="col-lg-6">
+           <div class="col-lg-12">
                <div class="card mb-4">
                    <div class="card-body">
                        <form method="post" action="/admin/addProducts" enctype="multipart/form-data"onsubmit="return validateForm()">
@@ -69,12 +69,37 @@
                                    <div id="salePrice-error" class="error-message"></div>
                                </div>
                                <div class="col-lg-4">
-                                   <div class="mb-4">
-                                       <label class="form-label">Quantity</label>
-                                       <input placeholder="" name="quantity" type="text" class="form-control border">
-                                       <div id="quantity-error" class="error-message"></div>
-                                   </div>
-                               </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Size 6 Quantity</label>
+                                    <input placeholder="Enter quantity for size 6" name="size6Quantity" type="number" class="form-control border" min="0">
+                                    <div id="size6Quantity-error" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <div class="mb-4">
+                                    <label class="form-label">Size 7 Quantity</label>
+                                    <input placeholder="Enter quantity for size 7" name="size7Quantity" type="number" class="form-control border" min="0">
+                                    <div id="size7Quantity-error" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <div class="mb-4">
+                                    <label class="form-label">Size 8 Quantity</label>
+                                    <input placeholder="Enter quantity for size 8" name="size8Quantity" type="number" class="form-control border" min="0">
+                                    <div id="size8Quantity-error" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <div class="mb-4">
+                                    <label class="form-label">Size 9 Quantity</label>
+                                    <input placeholder="Enter quantity for size 9" name="size9Quantity" type="number" class="form-control border" min="0">
+                                    <div id="size9Quantity-error" class="error-message"></div>
+                                </div>
+                            </div>
+                            
                            </div>
                            <div class="row">
                                <div class="col-lg-4">
