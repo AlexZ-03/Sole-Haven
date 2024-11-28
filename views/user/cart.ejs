@@ -9,6 +9,7 @@
             <tr>
                 <th>Product Image</th>
                 <th>Product Name</th>
+                <th>Size</th>
                 <th>Quantity</th>
                 <th>Price</th>
                 <th>Subtotal</th>
@@ -24,9 +25,11 @@
                                 <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>" 
                                  style="width: 60px; height: 60px; object-fit: cover;"></a>
                         </td>
-                        <td><%= item.productId.productName %></td> <!-- Use the populated product details -->
+                        <td><%= item.productId.productName %></td>
+                        <td><%= item.size %></td>
                         <td>
                             <form action="/cart/update/<%= item._id %>" method="POST">
+                            <input type="hidden" name="size" value="<%= item.size %>">
                             <div class="input-group" style="width: 160px;">
                                 <!-- Decrease button -->
                                 <button type="submit" name="decreaseQuantity" value="1" class="btn btn-sm btn-success"

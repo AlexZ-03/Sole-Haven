@@ -68,6 +68,7 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
+                                <th>Size</th>
                                 <th>Quantity</th>
                                 <th>Subtotal</th>
                             </tr>
@@ -84,6 +85,7 @@
                                             <%= item.productId.productName %>
                                         </div>
                                     </td>
+                                    <td class="text-center"><%= item.size %></td>
                                     <td class="text-center"><%= item.quantity %></td>
                                     <td class="text-end">₹<%= subtotal.toFixed(2) %></td>
                                 </tr>

@@ -27,6 +27,10 @@ const orderSchema = new Schema({
         price: {
             type: Number,
             default: 0
+        },
+        size: {
+             type: Number,
+            default: 0
         }
     }],
     totalPrice: {

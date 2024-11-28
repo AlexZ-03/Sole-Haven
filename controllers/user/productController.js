@@ -83,9 +83,6 @@ const addToCart = async (req, res) => {
 };
 
 
-
-
-
 const getCartPage = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -117,7 +114,13 @@ const updateCart = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const { itemId } = req.params;
-        const { increaseQuantity, decreaseQuantity, quantity } = req.body;
+        const { size, increaseQuantity, decreaseQuantity, quantity } = req.body;
+
+
+        console.log('Request itemId:', itemId);
+        console.log('Request size:', size);
+        console.log('itemId', itemId);
+
 
         let newQuantity = parseInt(quantity);
 
@@ -140,9 +143,13 @@ const updateCart = async (req, res) => {
             return res.status(404).json({ message: 'Cart not found' });
         }
 
-        const itemIndex = cart.items.findIndex(item => item._id.toString() === itemId);
+        console.log('Cart items:', cart.items);
+
+        const itemIndex = cart.items.findIndex(
+            item => item._id.toString() === itemId && item.size === size
+        );
         if (itemIndex === -1) {
-            return res.status(404).json({ message: 'Item not found in cart' });
+            return res.status(404).json({ message: 'Item not found in cart for the specified size' });
         }
 
         const item = cart.items[itemIndex];
@@ -152,13 +159,18 @@ const updateCart = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        const maxQuantity = 5;
-        if (newQuantity > maxQuantity) {
-            return res.status(400).json({ message: `You cannot add more than ${maxQuantity} units of this product to your cart` });
+        const sizeDetails = product.sizes.find(s => s.size === parseInt(size));
+        if (!sizeDetails) {
+            return res.status(404).json({ message: 'Specified size not available for this product' });
         }
 
-        if (newQuantity > product.quantity) {
-            return res.status(400).json({ message: 'Not enough stock available' });
+        const maxQuantity = 5;
+        if (newQuantity > maxQuantity) {
+            return res.status(400).json({ message: `You cannot add more than ${maxQuantity} units of this product in this size to your cart` });
+        }
+
+        if (newQuantity > sizeDetails.quantity) {
+            return res.status(400).json({ message: 'Not enough stock available for the selected size' });
         }
 
         item.quantity = newQuantity;
@@ -171,6 +183,7 @@ const updateCart = async (req, res) => {
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
+
 
 const removeFromCart = async (req, res) => {
     try {
@@ -200,19 +213,17 @@ const removeFromCart = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        const { search, sort, page = 1 } = req.query; // Default page is 1
-        const limit = 12; // Products per page
-        const skip = (page - 1) * limit; // Calculate how many products to skip
+        const { search, sort, page = 1 } = req.query; 
+        const limit = 12; 
+        const skip = (page - 1) * limit;
 
         let filter = {};
         let sortCriteria = {};
 
-        // Apply search filter
         if (search) {
             filter.productName = { $regex: search, $options: 'i' };
         }
 
-        // Apply sorting criteria
         switch (sort) {
             case 'popularity':
                 sortCriteria = { popularity: -1 };
@@ -235,9 +246,7 @@ const getShopPage = async (req, res) => {
             default:
                 sortCriteria = {};
         }
-
-        // Fetch products with pagination and sorting
-        const totalProducts = await Product.countDocuments(filter); // Total products for pagination
+        const totalProducts = await Product.countDocuments(filter);
         const products = await Product.find(filter)
             .sort(sortCriteria)
             .skip(skip)
@@ -247,7 +256,6 @@ const getShopPage = async (req, res) => {
                 select: 'rating',
             });
 
-        // Calculate average ratings
         const productsWithRatings = products.map(product => {
             const reviews = product.reviews || [];
             const ratings = reviews.map(review => review.rating);
@@ -261,7 +269,6 @@ const getShopPage = async (req, res) => {
             };
         });
 
-        // Calculate total pages
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.render('shop', {
@@ -391,6 +398,7 @@ const postCheckoutPage = async (req, res) => {
 
         const orderedItems = cart.items.map(item => ({
             product: item.productId,
+            size: item.size,
             quantity: item.quantity,
             price: item.productId.salePrice
         }));
@@ -442,9 +450,14 @@ const postCheckoutPage = async (req, res) => {
             await newOrder.save();
 
             await Promise.all(orderedItems.map(async (item) => {
-                await Product.findByIdAndUpdate(
-                    item.product._id,
-                    { $inc: { quantity: -item.quantity } },
+                await Product.findOneAndUpdate(
+                    {
+                        _id: item.product._id, 
+                        'sizes.size': item.size
+                    },
+                    {
+                        $inc: { 'sizes.$.quantity': -item.quantity } 
+                    },
                     { new: true }
                 );
             }));
@@ -521,13 +534,31 @@ const razorpaySuccess = async (req, res) => {
                 { new: true }
             );
 
-            await Promise.all(order.orderedItems.map(async (item) => {
-                await Product.findByIdAndUpdate(
-                    item.product._id,
-                    { $inc: { quantity: -item.quantity } },
-                    { new: true }
-                );
-            }));
+            console.log('orders',order.orderedItems);
+
+            const updateOperations = order.orderedItems.map(item => {
+                console.log('Item:', item);
+                const filter = {
+                    _id: item.product,
+                    'sizes.size': item.size
+                };
+            
+                console.log('Filter for product update:', filter);
+            
+                return {
+                    updateOne: {
+                        filter: filter,
+                        update: {
+                            $inc: { 'sizes.$.quantity': -item.quantity }
+                        }
+                    }
+                };
+            });
+            
+            // Execute bulkWrite with logging
+            const result = await Product.bulkWrite(updateOperations);
+            console.log('BulkWrite result:', result);
+            
 
             return res.json({ success: true, orderId: order._id });
         } else {

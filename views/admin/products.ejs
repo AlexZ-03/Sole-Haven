@@ -2,6 +2,37 @@
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
 </head>
+<style>
+    .size-container {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;  /* Make it look like it's clickable */
+    }
+
+    .size-details {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 10;
+        background: white;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: smaller;
+        width: 100%;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .size-container:hover .size-details {
+        display: block;  /* Show size details when the container is hovered */
+    }
+
+    /* Ensure the size details table is not too wide */
+    .size-details table {
+        width: 100%;
+    }
+</style>
 <div class="content-header">
     <div>
         <h2 class="content-title card-title">Products</h2>
@@ -25,7 +56,7 @@
                 <th scope="col"><b>Sale Price</b></th>
                 <th scope="col"><b>Offer Price</b></th>
                 <th scope="col"><b>Offer</b></th>
-                <th scope="col"><b>Quantity</b></th>
+                <th scope="col"><b>Quantities</b></th>
                 <th scope="col"><b>Action</b></th>
                 <th scope="col"><b>Edit</b></th>
             </tr>
@@ -43,7 +74,7 @@
                     <% } else { %>
                         0%
                     <% } %>
-                </td>
+                </td>               
                 <td>
                     <% if(locals.data[i].productOffer === 0) { %>
                     <button class="btn btn-info" onclick="addOffer('<%=data[i]._id%>')" style="width: 100px;">
@@ -55,7 +86,35 @@
                     </button>
                     <% } %>
                 </td>
-                <td><%=data[i].quantity %></td>
+                <td>
+                    <% if (data[i].sizes.length > 0) { %>
+                        <div class="size-container">
+                            <div>
+                                <strong>Total Quantity: </strong><%= data[i].sizes.reduce((total, sizeObj) => total + sizeObj.quantity, 0) %>
+                            </div>
+                            <div class="size-details">
+                                <table class="table table-bordered" style="font-size: smaller;">
+                                    <thead>
+                                        <tr>
+                                            <th>Size</th>
+                                            <th>Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% data[i].sizes.forEach(sizeObj => { %>
+                                            <tr>
+                                                <td><%= sizeObj.size %></td>
+                                                <td><%= sizeObj.quantity %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        No sizes available
+                    <% } %>
+                </td>           
                 <td>
                 <% if(locals.data[i].isBlocked === false) { %>
                     <button class="btn btn-danger" style="width: 80px;">
