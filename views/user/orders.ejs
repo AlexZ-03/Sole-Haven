@@ -149,7 +149,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><%= order.orderId %></td>
+                                <td id="order-id"><%= order.orderId %></td>
                                 <% if(order.status !== 'Canceled'){ %>
                                 <td><%= order.paymentStatus %></td>
                                 <% } %>
@@ -226,11 +226,52 @@
 
 <script>
    document.addEventListener('DOMContentLoaded', function() {
+    // Handle cancel order
+    const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.closest('tr').querySelector('#order-id').textContent.trim();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You are about to cancel this order.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, cancel it!',
+                cancelButtonText: 'No, keep it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/cancel-order/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Canceled!', 'Your order has been canceled.', 'success')
+                            .then(() => {
+                                const cancelBtn = this;
+                                cancelBtn.textContent = 'Order is canceled';
+                                cancelBtn.classList.remove('cancel-order-btn');
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'There was an issue with the server.', 'error');
+                    });
+                }
+            });
+        });
+    });
+
     const returnButtons = document.querySelectorAll('.return-order-btn');
-    
     returnButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const orderId = this.closest('tr').querySelector('td').textContent;
+            const orderId = this.closest('tr').querySelector('td').textContent.trim();
 
             Swal.fire({
                 title: 'Are you sure?',
@@ -268,6 +309,8 @@
         });
     });
 });
+
+
 </script>
 
 </html>

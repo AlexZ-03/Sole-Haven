@@ -88,7 +88,7 @@ const getOrders = async (req, res) => {
 
 const cancelOrder = async (req, res) => {
     try {
-        const { orderId } = req.body;
+        const { orderId } = req.params;
         const userId = req.session.user;
 
         if (!userId) {
@@ -103,19 +103,33 @@ const cancelOrder = async (req, res) => {
             }
         });
 
+        console.log('Received Order ID:', orderId);
+        console.log('User Order History:', userData.orderHistory);
+
         const order = userData.orderHistory.find(order => order.orderId === orderId);
+
+
         
         order.status = 'Canceled';
         await order.save();
 
         for (let item of order.orderedItems) {
             const product = item.product;
-
-            if (product && product.quantity >= 0) {
-                product.quantity += item.quantity;
-                await product.save();
+        
+            if (product && Array.isArray(product.sizes)) {
+                const sizeToUpdate = product.sizes.find(sizeObj => sizeObj.size === item.size);
+                
+                if (sizeToUpdate && sizeToUpdate.quantity >= 0) {
+                    sizeToUpdate.quantity += item.quantity;
+                    await product.save();
+                } else {
+                    console.error(`Size ${item.size} not found or invalid in product sizes.`);
+                }
+            } else {
+                console.error('Product sizes array not found or invalid.');
             }
         }
+        
 
         res.json({ success: true });
     } catch (error) {

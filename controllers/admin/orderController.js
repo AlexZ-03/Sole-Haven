@@ -51,11 +51,22 @@ const cancelOrder = async (req, res) => {
         for (let item of order.orderedItems) {
             const product = item.product;
             const quantityToRestore = item.quantity;
-
-            await Product.findByIdAndUpdate(product._id, {
-                $inc: { quantity: quantityToRestore }
-            });
-        }
+            const sizeToRestore = item.size;
+        
+            await Product.findByIdAndUpdate(
+                product._id,
+                {
+                    $inc: {
+                        "sizes.$[size].quantity": quantityToRestore
+                    }
+                },
+                {
+                    arrayFilters: [
+                        { "size.size": sizeToRestore } 
+                    ]
+                }
+            );
+        }        
         await Order.findByIdAndUpdate(orderId, { status: 'Canceled' }, { new: true });
 
         res.json({ success: true, message: 'Order successfully canceled and product quantities updated' });
