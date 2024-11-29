@@ -207,8 +207,12 @@
                                             </div>
                                             <div class="product-extra-link2">
                                                 <button type="submit" class="button button-add-to-cart" onclick="addToCart('<%=product._id%>', 1)">Add to Cart</button>
-                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                                <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                                                <a aria-label="Add To Wishlist" 
+                                                class="action-btn hover-up" 
+                                                id="wishlist-btn" 
+                                                onclick="addToWishlist('<%=product._id%>')">
+                                                    <i class="fi-rs-heart"></i>
+                                                </a>
                                             </div>
                                         </div>
                                         <ul class="product-meta font-xs color-grey mt-50">
@@ -435,6 +439,45 @@
                     Swal.fire("Error", "There was an issue with adding the product to the cart.", "error");
                 });
         }
+
+        function addToWishlist(productId) {
+        fetch('/addToWishlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId: productId }),
+        })
+        .then(response => {
+            if (response.ok) {
+                const wishlistButton = document.getElementById('wishlist-btn');
+                wishlistButton.style.color = 'red';
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Item added to Wishlist!',
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                throw new Error('Failed to add to wishlist');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong!',
+            });
+        });
+    }
+
 
 
     </script>

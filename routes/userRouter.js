@@ -64,6 +64,10 @@ router.post('/paymentFailed', userAuth, productController.razorpayFailure);
 router.get('/productDetails', userController.getProductPage);
 router.post('/productDetails/:id/review', productController.submitReview);
 
+router.get('/wishlist', userAuth, productController.getWishlist);
+router.post('/addToWishlist', userAuth, productController.addToWishlist);
+router.delete('/removeFromWishlist/:productId', userAuth, productController.removeWishlist);
+
 
 
 

@@ -5,6 +5,7 @@ const Review = require('../../models/reviewSchema');
 const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
 const Razorpay = require('razorpay');
+const Wishlist = require('../../models/wishlilstSchema');
 
 
 const addToCart = async (req, res) => {
@@ -555,7 +556,6 @@ const razorpaySuccess = async (req, res) => {
                 };
             });
             
-            // Execute bulkWrite with logging
             const result = await Product.bulkWrite(updateOperations);
             console.log('BulkWrite result:', result);
             
@@ -606,6 +606,86 @@ const getOrderConformed = (req, res) => {
     });
 };
 
+const getWishlist = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const wishlist = await Wishlist.findOne({ userId })
+            .populate({
+                path: 'products.productId',
+                select: 'productName salePrice productImage',
+            });
+
+        if (!wishlist || wishlist.products.length === 0) {
+            return res.render('wishlist', { products: [], user: req.user });
+        }
+        
+
+        const products = wishlist.products.map(p => ({
+            id: p.productId._id,
+            name: p.productId.productName,
+            price: p.productId.salePrice,
+            image: p.productId.productImage[0],
+        }));
+
+        console.log(products)
+
+        res.render('wishlist', { products, user: req.user });
+    } catch (error) {
+        console.error('Error fetching wishlist:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+const addToWishlist = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const userId = req.user._id;
+
+        let wishlist = await Wishlist.findOne({ userId });
+        if (!wishlist) {
+            wishlist = new Wishlist({ userId, products: [] });
+        }
+
+        const productExists = wishlist.products.some(
+            (product) => product.productId.toString() === productId
+        );
+
+        if (!productExists) {
+            wishlist.products.push({ productId });
+            await wishlist.save();
+        }
+
+        res.status(200).send({ message: 'Product added to wishlist' });
+    } catch (error) {
+        console.error('Error adding product to wishlist:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
+    }
+}
+
+const removeWishlist = async(req, res) => {
+    const userId = req.user._id; 
+    const productId = req.params.productId;
+
+    try {
+        const wishlist = await Wishlist.findOne({ userId });
+        
+        if (!wishlist) {
+            return res.status(404).send('Wishlist not found');
+        }
+
+        wishlist.products = wishlist.products.filter(product => product.productId.toString() !== productId);
+
+        await wishlist.save();
+
+        res.status(200).send('Item removed from wishlist');
+    } catch (error) {
+        console.error('Error removing item from wishlist:', error);
+        res.status(500).send('Error removing item from wishlist');
+    }
+}
+
 module.exports = {
     addToCart,
     getCartPage,
@@ -618,5 +698,8 @@ module.exports = {
     getOrderConformed,
     razorpaySuccess,
     getRazorpay,
-    razorpayFailure
+    razorpayFailure,
+    getWishlist,
+    addToWishlist,
+    removeWishlist,
 }

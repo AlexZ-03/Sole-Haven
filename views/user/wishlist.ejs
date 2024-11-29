@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+    <!-- Css Styles -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="/css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="/css/magnific-popup.css" type="text/css">
+    <link rel="stylesheet" href="/css/nice-select.css" type="text/css">
+    <link rel="stylesheet" href="/css/owl.carousel.min.css" type="text/css">
+    <link rel="stylesheet" href="/css/slicknav.min.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/assets/css/main.css?v=3.4">
+    <link rel="stylesheet" href="/user/headerStyle.css" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<style>
+    .card:hover {
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 20px;
+    }
+}
+
+.container.mt-5 {
+    height: 100%;
+}
+
+
+
+
+</style>
+
+<body>
+    <%- include("../../views/partials/user/header", { user: user }) %>
+
+    <div class="container mt-5" >
+        <h2 class="text-center">Your Wishlist</h2>
+        <div class="row">
+            <% if (products.length > 0) { %>
+                <% products.forEach(product => { %>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <img src="/uploads/product-images/<%= product.image || '/images/placeholder.png' %>" class="card-img-top" alt="<%= product.name %>">
+                            <div class="card-body">
+                                <h5 class="card-title"><%= product.name %></h5>
+                                <p class="card-text">$<%= product.price %></p>
+                                <a href="/productDetails?id=<%= product.id %>" class="btn btn-primary">View</a>
+                                <button class="btn btn-danger" onclick="removeFromWishlist('<%= product.id %>')">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center justify-content-center align-items-center">
+                    <p class="text-center mt-4">Your wishlist is empty!</p>
+                    <a href="/shop" class="btn btn-primary mt-3">Browse Products</a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    
+    <%- include("../../views/partials/user/footer") %>
+    
+
+    <!-- Vendor JS -->
+    <script src="/assets/js/vendor/jquery-3.6.0.min.js"></script>
+    <script src="/assets/js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/main.js?v=3.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function removeFromWishlist(productId) {
+        fetch(`/removeFromWishlist/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to remove item from wishlist');
+            }
+            Swal.fire({
+                icon: 'success',
+                title: 'Item Removed',
+                text: 'This item has been removed from your wishlist.',
+                confirmButtonText: 'OK',
+            }).then(() => {
+                location.reload();
+            });
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong. Please try again later.',
+            });
+        });
+    }
+
+    </script>
+
+</body>
+
+</html>
