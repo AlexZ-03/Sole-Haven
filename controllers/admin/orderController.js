@@ -3,6 +3,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
+const Wallet = require('../../models/walletSchema')
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -42,10 +43,30 @@ const cancelOrder = async (req, res) => {
     const orderId = req.params.orderId;
 
     try {
-        const order = await Order.findById(orderId).populate('orderedItems.product');
+        const order = await Order.findById(orderId).populate('orderedItems.product').populate('customer');
 
         if (!order) {
             return res.status(404).send('Order not found');
+        }
+
+        if (order.paymentStatus === 'Paid') {
+            const user = order.customer;
+
+            let wallet = await Wallet.findOne({ user: user._id });
+
+            if (!wallet) {
+                wallet = new Wallet({ user: user._id, balance: 0 });
+                await wallet.save();
+            }
+
+            wallet.balance += order.finalAmount;
+            await wallet.save();
+
+            wallet.transactions.push({
+                description: `Refund for canceled order ${order.orderId}`,
+                amount: order.finalAmount,
+            });
+            await wallet.save();
         }
 
         for (let item of order.orderedItems) {
@@ -66,10 +87,11 @@ const cancelOrder = async (req, res) => {
                     ]
                 }
             );
-        }        
+        }
+
         await Order.findByIdAndUpdate(orderId, { status: 'Canceled' }, { new: true });
 
-        res.json({ success: true, message: 'Order successfully canceled and product quantities updated' });
+        res.json({ success: true, message: 'Order successfully canceled and product quantities updated, refund processed' });
     } catch (error) {
         console.error('Error canceling order:', error);
         res.status(500).send('Error canceling order');
@@ -103,6 +125,10 @@ const editOrder = async (req, res) => {
 
         if (!order) {
             return res.status(404).send('Order not found');
+        }
+
+        if (status === 'Delivered' && order.paymentMethod === 'COD') {
+            order.paymentStatus = 'Paid';
         }
 
         if (status !== 'Delivered') {

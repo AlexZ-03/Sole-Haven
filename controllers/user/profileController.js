@@ -3,6 +3,7 @@ const Address = require('../../models/addressSchema');
 const Cart = require('../../models/cartSchema');
 const Product = require("../../models/productSchema");
 const Orders = require('../../models/orderSchema');
+const Wallet = require('../../models/walletSchema')
 const bcrypt = require('bcrypt');
 
 
@@ -108,14 +109,34 @@ const cancelOrder = async (req, res) => {
 
         const order = userData.orderHistory.find(order => order.orderId === orderId);
 
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
 
-        
+        if (order.paymentStatus === 'Paid') {
+            let wallet = await Wallet.findOne({ user: userId });
+
+            if (!wallet) {
+                wallet = new Wallet({ user: userId, balance: 0 });
+                await wallet.save();
+            }
+
+            wallet.balance += order.finalAmount;
+            await wallet.save();
+
+            wallet.transactions.push({
+                description: `Refund for canceled order ${order.orderId}`,
+                amount: order.finalAmount,
+            });
+            await wallet.save();
+        }
+
         order.status = 'Canceled';
         await order.save();
 
         for (let item of order.orderedItems) {
             const product = item.product;
-        
+
             if (product && Array.isArray(product.sizes)) {
                 const sizeToUpdate = product.sizes.find(sizeObj => sizeObj.size === item.size);
                 
@@ -129,14 +150,14 @@ const cancelOrder = async (req, res) => {
                 console.error('Product sizes array not found or invalid.');
             }
         }
-        
 
-        res.json({ success: true });
+        res.json({ success: true, message: 'Order successfully canceled, and wallet refunded' });
     } catch (error) {
         console.error('Error canceling order:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 const returnOrder = async(req, res) => {
     try {
@@ -286,6 +307,21 @@ const deleteAddress = async (req, res) => {
     }
 }
 
+const getWalletPage = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        
+        const user = await User.findById(userId).populate('wallet');
+        console.log(user.wallet)
+        
+        res.render('wallet', { user: user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error occurred while loading wallet page.");
+    }
+};
+
+
 
 module.exports = {
     userProfile,
@@ -296,4 +332,5 @@ module.exports = {
     deleteAddress,
     cancelOrder,
     returnOrder,
+    getWalletPage,
 }

@@ -45,7 +45,7 @@ router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);
 router.get('/orders', userAuth, profileController.getOrders);
 router.post('/cancel-order/:orderId', userAuth, profileController.cancelOrder);
 router.post('/return-order/:orderId', userAuth, profileController.returnOrder);
-
+router.get('/wallet', userAuth, profileController.getWalletPage);
 
 router.get('/cart', userAuth, productController.getCartPage);
 router.get('/addTocart', userAuth, productController.addToCart);
@@ -67,6 +67,7 @@ router.post('/productDetails/:id/review', productController.submitReview);
 router.get('/wishlist', userAuth, productController.getWishlist);
 router.post('/addToWishlist', userAuth, productController.addToWishlist);
 router.delete('/removeFromWishlist/:productId', userAuth, productController.removeWishlist);
+
 
 
 

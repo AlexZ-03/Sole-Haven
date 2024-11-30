@@ -332,7 +332,6 @@ const resetPassword = async (req, res) => {
     try {
         const { password } = req.body;
 
-        // Check if the email is stored in the session
         const email = req.session.resetEmail;
         if (!email) {
             return res.status(400).json({
@@ -341,7 +340,6 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        // Validate the password
         if (!password) {
             return res.status(400).json({
                 success: false,
@@ -358,7 +356,6 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        // Find the user by email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({
@@ -367,18 +364,14 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        // Hash the new password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Update the user's password in the database
         user.password = hashedPassword;
         await user.save();
 
-        // Clear sensitive session data
         req.session.resetEmail = null;
         req.session.resetOtp = null;
 
-        // Respond with success
         return res.json({
             success: true,
             message: 'Password reset successfully.',
@@ -403,6 +396,7 @@ const getProductPage = async (req, res) => {
                 path: 'reviews',
                 populate: { path: 'userId', select: 'name' }
             });
+            
         const relatedProducts = await Product.find({ 
             category: product.category._id, 
             _id: { $ne: product._id }

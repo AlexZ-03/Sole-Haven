@@ -1,0 +1,141 @@
+<%- include("../../views/partials/user/header", { user: user }) %>
+
+<html>
+<head>
+    <title>User Wallet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/wallet.css">
+    <link rel="stylesheet" href="/assets/css/profile.css">
+</head>
+<style>
+    .wallet-overview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #925bcc, #3d62a1);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.wallet-overview h3 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.transaction-history {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-history h3 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.transaction-history table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.transaction-history thead {
+    background: #2575fc;
+    color: white;
+}
+
+.transaction-history th,
+.transaction-history td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.transaction-history tbody tr:hover {
+    background: #f1f1f1;
+}
+
+.transaction-history td:nth-child(3) {
+    font-weight: bold;
+    color: #2575fc;
+}
+
+.transaction-history td:nth-child(3):not([data-amount^="-"]) {
+    color: #2ecc71;
+}
+
+.transaction-history td[data-amount^="-"] {
+    color: #e74c3c;
+}
+
+p {
+    color: #666;
+    font-size: 16px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+</style>
+<body>
+    <% if (user) { %>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <img alt="Profile Picture" height="100" src="https://e7.pngegg.com/pngimages/136/22/png-clipart-user-profile-computer-icons-girl-customer-avatar-angle-heroes-thumbnail.png" width="100" />
+                <span>Hello</span>
+                <h4 class="p-1 text-black"><%= user.name %></h4>
+            </div>
+            <ul class="menu">
+                <li><a href="/userProfile"><i class="fas fa-user"></i> Account Overview</a></li>
+                <li><a href="/orders"><i class="fas fa-box"></i> My Orders</a></li>
+                <li><a href="/manageAddress"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+                <li><a class="active" href="/wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
+            </ul>
+            <div class="logout text-white">
+                <button><a href="/logout" class="border-rounded text-white">LOGOUT</a></button>
+            </div>
+        </div>
+        <div class="content">
+            <h2 class="text-primary">Your Wallet</h2>
+            <div class="wallet-overview">
+                <h3>Your Balance: ₹<span id="balance"><%= user.wallet.balance %></span></h3>
+            </div>
+            <div class="transaction-history">
+                <h3>Transaction History</h3>
+                <% if (user.wallet.transactions && user.wallet.transactions.length > 0) { %>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% user.wallet.transactions.forEach(transaction => { %>
+                                <tr>
+                                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                                    <td><%= transaction.description %></td>
+                                    <td data-amount="<%= transaction.amount %>">
+                                        <%= transaction.amount >= 0 ? "+" : "" %>$<%= transaction.amount %>
+                                    </td>                                    
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p>No transactions found.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    <% } %>
+</body>
+</html>
+
+<%- include("../../views/partials/user/footer") %>
