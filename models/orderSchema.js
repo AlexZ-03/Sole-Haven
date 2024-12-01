@@ -60,7 +60,7 @@ const orderSchema = new Schema({
     },
     createdOn : {
         type: Date,
-        dafalut: Date.now,
+        defalut: Date.now,
         required: true
     },
     couponApplied: {

@@ -214,7 +214,18 @@ const login = async (req, res) => {
             return res.render('login', {message: "Email Or Password Is Incorrect "});
         }
 
-        req.session.user = { _id: findUser._id, name: findUser.name, email: findUser.email};
+        req.user = findUser;
+
+        if (req.user && req.user._id && req.user.name && req.user.email) {
+            req.session.user = {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            };
+        } else {
+            return res.status(500).send('User data is incomplete');
+        }
+        
         res.redirect('/');
     } catch (error) {
         console.error('Login error occured', error);
