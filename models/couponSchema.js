@@ -53,7 +53,16 @@ const couponSchema = new Schema({
     createdAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    user :[{
+      userId: {
+          type: Schema.Types.ObjectId,
+          ref: "User"
+      },
+      usageCount: {
+          type: Number,
+      }
+  }]
 })
 
 const Coupon = mongoose.model("Coupon",couponSchema);

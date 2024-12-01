@@ -9,7 +9,7 @@
                     <h4 class="card-title text-center">Order Details</h4>
                     <p class="text-center">
                         <strong>Order ID:</strong> <%= orderId %> <br>
-                        <strong>Total Amount:</strong> ₹<%= totalAmount %>
+                        <strong>Total Amount:</strong> ₹<%= finalAmount %>
                     </p>
                     <button id="rzp-button" class="btn btn-primary btn-block mt-4">Pay with Razorpay</button>
                 </div>
@@ -23,7 +23,7 @@
 <script>
     const options = {
         key: '<%= razorpayKey %>',
-        amount: '<%= totalAmount * 100 %>',
+        amount: '<%= finalAmount * 100 %>',
         currency: 'INR',
         name: 'Sole-Haven',
         description: 'Order Payment',

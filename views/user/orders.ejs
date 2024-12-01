@@ -155,7 +155,7 @@
                                 <% } %>
                                 <td><%= order.paymentMethod %></td>
                                 <td><%= order.status %></td>
-                                <td>₹<%= order.total %></td>
+                                <td>₹<%= order.finalAmount %></td>
                                 <td>
                                     <div class="order-actions">
                                         <% if (order.status === 'Canceled') { %>

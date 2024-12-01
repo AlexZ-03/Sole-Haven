@@ -59,6 +59,7 @@ router.get('/orderConformed', userAuth, productController.getOrderConformed);
 router.get('/razorpay', userAuth, productController.getRazorpay);
 router.post('/paymentSuccess', userAuth, productController.razorpaySuccess);
 router.post('/paymentFailed', userAuth, productController.razorpayFailure);
+router.post('/applyCoupon', userAuth, productController.applyCoupon);
 
 //Product management
 router.get('/productDetails', userController.getProductPage);

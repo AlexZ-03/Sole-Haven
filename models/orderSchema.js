@@ -60,7 +60,7 @@ const orderSchema = new Schema({
     },
     createdOn : {
         type: Date,
-        defalut: Date.now,
+        default: Date.now,
         required: true
     },
     couponApplied: {
@@ -80,7 +80,7 @@ const orderSchema = new Schema({
     paymentMethod: {
         type: String,
         required: true,
-        enum: ['COD', 'Razorpay']
+        enum: ['COD', 'Razorpay', 'Wallet']
     },
     returnStatus : {
         type: String,

@@ -6,6 +6,7 @@ const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
 const Razorpay = require('razorpay');
 const Wishlist = require('../../models/wishlilstSchema');
+const Coupon = require('../../models/couponSchema');
 
 
 const addToCart = async (req, res) => {
@@ -403,12 +404,20 @@ const postCheckoutPage = async (req, res) => {
             quantity: item.quantity,
             price: item.productId.salePrice
         }));
-        const totalAmount = orderedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+        let totalAmount = orderedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+        let finalAmount = totalAmount;
+        if (req.session.coupon) {
+            finalAmount = req.session.coupon.finalAmount;
+        }
+
+        let discount = totalAmount - finalAmount;
 
         if (paymentMethod === 'razorpay') {
 
             const razorpayOrder = await razorpay.orders.create({
-                amount: totalAmount * 100,
+                amount: finalAmount * 100,
                 currency: 'INR',
                 receipt: `order_rcptid_${Date.now()}`,
                 notes: { userId, addressId }
@@ -418,13 +427,14 @@ const postCheckoutPage = async (req, res) => {
                 customer: userId,
                 orderedItems,
                 totalPrice: totalAmount,
-                finalAmount: totalAmount,
+                discount,
+                finalAmount,
                 address: addressId,
                 invoiceDate: new Date(),
                 status: 'Pending',
                 razorpayOrderId: razorpayOrder.id,
                 createdOn: new Date(),
-                couponApplied: false,
+                couponApplied: req.session.coupon ? true : false,
                 paymentMethod: 'Razorpay'
             });
 
@@ -432,19 +442,22 @@ const postCheckoutPage = async (req, res) => {
             
             const userData = await User.findById(userId);
 
-            return res.redirect(`/razorpay?orderId=${newOrder.orderId}&razorpayOrderId=${razorpayOrder.id}&razorpayKey=${process.env.RAZORPAY_ID}&totalAmount=${totalAmount}&userName=${userData.name}&userEmail=${userData.email}&userPhone=${userData.phone}`);
+            delete req.session.coupon
+
+            return res.redirect(`/razorpay?orderId=${newOrder.orderId}&razorpayOrderId=${razorpayOrder.id}&razorpayKey=${process.env.RAZORPAY_ID}&finalAmount=${finalAmount}&userName=${userData.name}&userEmail=${userData.email}&userPhone=${userData.phone}`);
           
         } else if (paymentMethod === 'cod') {
             const newOrder = new Order({
                 customer: userId,
                 orderedItems,
                 totalPrice: totalAmount,
-                finalAmount: totalAmount,
+                discount,
+                finalAmount,
                 address: addressId,
                 invoiceDate: new Date(),
                 status: 'Pending',
                 createdOn: new Date(),
-                couponApplied: false,
+                couponApplied: req.session.coupon ? true : false,
                 paymentMethod: 'COD'
             });
 
@@ -471,6 +484,8 @@ const postCheckoutPage = async (req, res) => {
 
             await Cart.updateOne({ userId }, { $set: { items: [] } });
 
+            delete req.session.coupon
+
             res.redirect(`/orderConformed?message=Your order with Order ID: ${newOrder._id} has been confirmed successfully!&orderId=${newOrder._id}`);
         } else {
             return res.status(400).send('Invalid payment method selected.');
@@ -481,14 +496,147 @@ const postCheckoutPage = async (req, res) => {
     }
 };
 
+const applyCoupon = async (req, res) => {
+    try {
+        const userId = req.session.user._id;
+        const { couponCode, totalAmount } = req.body;
+
+        if (!couponCode || !totalAmount) {
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Missing Details",
+                    text: "Please provide a coupon code and total amount.",
+                    icon: "error",
+                },
+            });
+        }
+
+        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: "Active" });
+
+        if (!coupon) {
+            return res.status(404).json({
+                success: false,
+                alert: {
+                    title: "Invalid Coupon",
+                    text: "The coupon code is not valid or has expired.",
+                    icon: "error",
+                },
+            });
+        }
+
+        const currentDate = new Date();
+        if (!coupon.startDate || !coupon.endDate || currentDate < coupon.startDate || currentDate > coupon.endDate) {
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Coupon Expired",
+                    text: "This coupon is not valid for the selected date.",
+                    icon: "warning",
+                },
+            });
+        }
+
+        if (
+            (coupon.minPurchaseAmount && totalAmount < coupon.minPurchaseAmount) ||
+            (coupon.maxPurchaseAmount && totalAmount > coupon.maxPurchaseAmount)
+        ) {
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Amount Mismatch",
+                    text: `Coupon is valid only for purchases between ₹${coupon.minPurchaseAmount || 0} and ₹${coupon.maxPurchaseAmount || Infinity}.`,
+                    icon: "info",
+                },
+            });
+        }
+
+        if (!coupon.user) {
+            coupon.user = [];
+        }
+
+        const userCouponData = coupon.user.find(user => user.userId.toString() === userId.toString());
+        if (userCouponData && userCouponData.usageCount >= coupon.usageLimit) {
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Usage Limit Reached",
+                    text: "You have already used this coupon the maximum allowed number of times.",
+                    icon: "warning",
+                },
+            });
+        }
+
+        let discount = 0;
+        if (coupon.discountType === "fixed") {
+            discount = Math.min(coupon.discountValue, totalAmount);
+        } else if (coupon.discountType === "percentage") {
+            discount = (coupon.discountValue / 100) * totalAmount;
+        }
+
+        console.log("Coupon Code:", couponCode);
+        console.log("Total Amount:", totalAmount);
+        console.log("Coupon Details:", coupon);
+        console.log("Calculated Discount:", discount);
+
+        if (discount <= 0) {
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Invalid Discount",
+                    text: "This coupon does not provide a valid discount for your purchase.",
+                    icon: "info",
+                },
+            });
+        }
+
+        const finalAmount = totalAmount - discount;
+
+        if (userCouponData) {
+            userCouponData.usageCount = (userCouponData.usageCount || 0) + 1;
+        } else {
+            coupon.user.push({ userId, usageCount: 1 });
+        }
+        await coupon.save();
+
+        req.session.coupon = {
+            couponCode,
+            discount,
+            finalAmount
+        };
+
+        return res.status(200).json({
+            success: true,
+            alert: {
+                title: "Coupon Applied",
+                text: `Discount of ₹${discount.toFixed(2)} applied! Your new total is ₹${finalAmount.toFixed(2)}.`,
+                icon: "success",
+            },
+            discount,
+            finalAmount,
+        });
+
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        res.status(500).json({
+            success: false,
+            alert: {
+                title: "Server Error",
+                text: "Something went wrong while applying the coupon. Please try again later.",
+                icon: "error",
+            },
+        });
+    }
+};
+
 const getRazorpay = async (req, res) => {
     try {
-        const { orderId, razorpayOrderId, razorpayKey, totalAmount, userName, userEmail, userPhone } = req.query;
+        const { orderId, razorpayOrderId, razorpayKey, finalAmount, userName, userEmail, userPhone } = req.query;
 
         console.log(orderId,
             razorpayOrderId,
             razorpayKey,
-            totalAmount,
+            finalAmount,
             userName,
             userEmail,
             userPhone)
@@ -497,7 +645,7 @@ const getRazorpay = async (req, res) => {
             orderId,
             razorpayOrderId,
             razorpayKey,
-            totalAmount,
+            finalAmount,
             userName,
             userEmail,
             userPhone
@@ -702,4 +850,5 @@ module.exports = {
     getWishlist,
     addToWishlist,
     removeWishlist,
+    applyCoupon,
 }
