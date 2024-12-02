@@ -7,6 +7,7 @@ const Order = require('../../models/orderSchema');
 const Razorpay = require('razorpay');
 const Wishlist = require('../../models/wishlilstSchema');
 const Coupon = require('../../models/couponSchema');
+const Wallet = require('../../models/walletSchema');
 
 
 const addToCart = async (req, res) => {
@@ -487,6 +488,62 @@ const postCheckoutPage = async (req, res) => {
             delete req.session.coupon
 
             res.redirect(`/orderConformed?message=Your order with Order ID: ${newOrder._id} has been confirmed successfully!&orderId=${newOrder._id}`);
+            
+        } else if (paymentMethod === 'wallet') {
+            const wallet = await Wallet.findOne({ user: userId });
+
+            if (!wallet || wallet.balance < finalAmount) {
+                return res.status(400).send('Insufficient wallet balance.');
+            }
+
+            wallet.balance -= finalAmount;
+            wallet.transactions.push({
+                description: `Order Payment for Order ID: ${Date.now()}`,
+                amount: -finalAmount
+            });
+            await wallet.save();
+
+            const newOrder = new Order({
+                customer: userId,
+                orderedItems,
+                totalPrice: totalAmount,
+                discount,
+                finalAmount,
+                address: addressId,
+                invoiceDate: new Date(),
+                status: 'Pending',
+                createdOn: new Date(),
+                couponApplied: req.session.coupon ? true : false,
+                paymentStatus: 'Paid',
+                paymentMethod: 'Wallet'
+            });
+
+            await newOrder.save();
+
+            await Promise.all(orderedItems.map(async (item) => {
+                await Product.findOneAndUpdate(
+                    {
+                        _id: item.product._id,
+                        'sizes.size': item.size
+                    },
+                    {
+                        $inc: { 'sizes.$.quantity': -item.quantity }
+                    },
+                    { new: true }
+                );
+            }));
+
+            await User.findByIdAndUpdate(
+                userId,
+                { $push: { orderHistory: newOrder._id } },
+                { new: true }
+            );
+
+            await Cart.updateOne({ userId }, { $set: { items: [] } });
+
+            delete req.session.coupon;
+
+            return res.redirect(`/orderConformed?message=Your order with Order ID: ${newOrder._id} has been confirmed successfully!&orderId=${newOrder._id}`);
         } else {
             return res.status(400).send('Invalid payment method selected.');
         }

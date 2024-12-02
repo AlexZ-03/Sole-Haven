@@ -225,6 +225,30 @@ const updateReturnStatus = async (req, res) => {
         let subject, text;
 
         if (returnStatus === 'Approved') {
+
+            order.status = 'Returned'
+            order.save();
+
+            if (order.paymentStatus === 'Paid') {
+                const user = order.customer;
+    
+                let wallet = await Wallet.findOne({ user: user._id });
+    
+                if (!wallet) {
+                    wallet = new Wallet({ user: user._id, balance: 0 });
+                    await wallet.save();
+                }
+    
+                wallet.balance += order.finalAmount;
+                await wallet.save();
+    
+                wallet.transactions.push({
+                    description: `Refund for canceled order ${order.orderId}`,
+                    amount: order.finalAmount,
+                });
+                await wallet.save();
+            }
+
             subject = 'Your Return Request Has Been Approved';
             text = `Dear ${customerName},
 
@@ -242,6 +266,9 @@ Best regards,
 Customer Support Team
 Sole Heaven`;
         } else if (returnStatus === 'Rejected') {
+            order.status = 'Delivered'
+            order.save();
+
             subject = 'Your Return Request Has Been Rejected';
             text = `Dear ${customerName},
 

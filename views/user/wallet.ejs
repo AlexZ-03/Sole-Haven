@@ -117,12 +117,12 @@ p {
                             </tr>
                         </thead>
                         <tbody>
-                            <% user.wallet.transactions.forEach(transaction => { %>
+                            <% user.wallet.transactions.reverse().forEach(transaction => { %>
                                 <tr>
                                     <td><%= new Date(transaction.date).toLocaleDateString() %></td>
                                     <td><%= transaction.description %></td>
                                     <td data-amount="<%= transaction.amount %>">
-                                        <%= transaction.amount >= 0 ? "+" : "" %>$<%= transaction.amount %>
+                                        <%= transaction.amount >= 0 ? "+" : "" %>₹<%= transaction.amount %>
                                     </td>                                    
                                 </tr>
                             <% }) %>
