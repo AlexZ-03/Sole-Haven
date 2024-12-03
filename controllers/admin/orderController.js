@@ -154,7 +154,7 @@ const editOrder = async (req, res) => {
 
 const getReturnOrderPage = async (req, res) => {
     try {
-        const returnOrders = await Order.find({ returnStatus: { $ne: 'Not Requested' } })
+        const returnOrders = await Order.find({ returnStatus: 'Requested' })
             .populate({
                 path: 'customer',
                 select: 'name email'
@@ -243,11 +243,14 @@ const updateReturnStatus = async (req, res) => {
                 await wallet.save();
     
                 wallet.transactions.push({
-                    description: `Refund for canceled order ${order.orderId}`,
+                    description: `Refund for Refunded order ${order.orderId}`,
                     amount: order.finalAmount,
                 });
                 await wallet.save();
             }
+
+            order.status = 'Returned';
+            order.save();
 
             subject = 'Your Return Request Has Been Approved';
             text = `Dear ${customerName},

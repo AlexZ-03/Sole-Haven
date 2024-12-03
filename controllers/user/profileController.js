@@ -8,21 +8,42 @@ const bcrypt = require('bcrypt');
 
 
 
-const userProfile = async (req, res) => {
+// const userProfile = async (req, res) => {
+//     try {
+//         const userId = req.session.user || req.user;
+//         const userData = await User.findById(userId);
+
+//         if(userData){
+//             res.render('profile', {
+//                 user: userData
+//             })
+//         }
+//     } catch (error) {
+//         console.log('Error : ', error);
+//         res.redirect('/pageNotFound');
+//     }
+// }
+
+const userProfile = async (req, res, next) => {
     try {
-        const userId = req.session.user;
+        console.log('----------userProfile-----------')
+        const userId = req.session.user || req.user;
+       
         const userData = await User.findById(userId);
 
-        if(userData){
-            res.render('profile', {
-                user: userData
-            })
+       
+        if (res.locals.user) {
+            return res.render("profile", {
+                user: res.locals.user,
+            });
+        } else {
+            return res.render("login");
         }
     } catch (error) {
-        console.log('Error : ', error);
-        res.redirect('/pageNotFound');
+        console.log("Profile page not found:", error);
+        next(error);
     }
-}
+};
 
 const getOrders = async (req, res) => {
     try {

@@ -17,33 +17,41 @@ const pageNotFound = async (req, res) => {
 
 const loadHomePage = async (req, res) => {
     try {
+        console.log('-----------loadHomePage------------');
         const today = new Date().toISOString();
         const findBanner = await Banner.find({
-            startDate: {$lt: new Date(today)},
-            endDate: {$gt: new Date(today)}
+            startDate: { $lt: new Date(today) },
+            endDate: { $gt: new Date(today) },
         });
+
+        const categories = await Category.find({ isListed: true });
+        let productData = await Product.find({
+            isBlocked: false,
+            category: { $in: categories.map(category => category._id) },
+        });
+
+        productData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        productData = productData.slice(0, 4);
+
         const userId = req.session.user;
-        const categories = await Category.find({isListed: true});
-        let productData = await Product.find(
-            {isBlocked: false,
-                category:{$in:categories.map(category => category._id)},
+
+        if (userId) {
+            const userData = await User.findOne({ _id: userId });
+
+            if (!userData || userData.isBlocked) {
+                req.session.destroy();
+                return res.render('home', { products: productData, banner: findBanner || [] });
             }
-        )
 
-        productData.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
-        productData =  productData.slice(0,4);
-
-        if(userId) {
-            const userData = await User.findOne({_id: userId});
-            res.render('home', {user:userData, products: productData, banner: findBanner || []});
-        } else {
-            res.render('home', {products: productData, banner:findBanner || []});
+            return res.render('home', { user: userData, products: productData, banner: findBanner || [] });
         }
+        res.render('home', { products: productData, banner: findBanner || [] });
     } catch (error) {
-        console.log('Home page not found');
+        console.error('Error loading the home page:', error);
         res.status(500).send('Server error');
     }
-}
+};
+
 
 const signUpPage = async (req, res) => {
     try {
@@ -149,7 +157,7 @@ const verifyOtp = async (req, res) => {
 
             await saveUserData.save();
             req.session.user = saveUserData._id;
-
+            sessionActive = true;
             return res.json({ success: true, redirectUrl: "/" });
         } else {
             return res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
@@ -185,6 +193,7 @@ const resendOtp = async (req, res) => {
 
 const loginPage = async (req, res) => {
     try {
+        console.log('----------loginPage--------')
         if(!req.session.user){
             return res.render('login');
         } else {
@@ -207,6 +216,7 @@ const login = async (req, res) => {
         if(findUser.isBlocked){
             return res.render('login', {message: "User is blocked by admin"});
         }
+        sessionActive = true;
 
         const passwordMatch = await bcrypt.compare(password, findUser.password);
 
@@ -225,7 +235,7 @@ const login = async (req, res) => {
         } else {
             return res.status(500).send('User data is incomplete');
         }
-        
+        sessionActive = true;
         res.redirect('/');
     } catch (error) {
         console.error('Login error occured', error);
@@ -241,6 +251,9 @@ const logout = async (req, res) => {
                 console.log("Error while logout :", err.message);
                 return res.redirect('/pageNotFound');
             }
+            sessionActive = false;
+
+            console.log('Session Destoryed')
 
             return res.redirect('/login')
         })
@@ -249,6 +262,8 @@ const logout = async (req, res) => {
         res.redirect('/pageNotFound');
     }
 }
+
+
 
 const getForgotPassword = async (req, res) => {
     try {
@@ -423,6 +438,20 @@ const getProductPage = async (req, res) => {
       }
 }
 
+const loadLogin = async(req,res)=>{
+    try {
+        console.log('------------LoadLogin-----------')
+        if(!req.session.user){
+            console.log("Rendering the loginpage...");
+            return res.render('login')
+        }else{
+            res.redirect('/')
+        }
+    } catch (error) {
+        res.redirect("/pageNotFound")
+    }
+}
+
 
 
 
@@ -442,5 +471,6 @@ module.exports = {
     verifyForgotPasswordOtp,
     getResetPassword,
     resetPassword,
+    loadLogin,
     
 }

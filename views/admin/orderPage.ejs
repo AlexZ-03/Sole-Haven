@@ -54,10 +54,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <% if (order.status !== 'Delivered' && order.status !== 'Canceled') { %>
+                                        <% if (order.status !== 'Delivered' && order.status !== 'Canceled' && order.status !== 'Returned') { %>
                                             <a href="/admin/orders/edit/<%= order._id %>" class="btn btn-sm btn-success">Edit</a>
                                         <% } %>
-                                        <% if (order.status !== 'Canceled' && order.status !== 'Delivered') { %>
+                                        <% if (order.status !== 'Canceled' && order.status !== 'Delivered' && order.status !== 'Returned') { %>
                                             <a href="javascript:void(0)" class="btn btn-sm btn-danger" onclick="confirmCancel('<%= order._id %>')">Cancel</a>
                                         <% } else {%>
                                             <span class="text-danger">No actions available for order</span>

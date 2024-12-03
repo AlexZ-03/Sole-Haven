@@ -29,7 +29,6 @@
         description: 'Order Payment',
         order_id: '<%= razorpayOrderId %>',
         handler: function (response) {
-            // Success: Update order status, empty cart, and show success message
             Swal.fire({
                 title: 'Payment Successful!',
                 text: 'Your payment has been successfully processed.',

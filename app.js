@@ -7,11 +7,13 @@ const db = require('./config/db');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 const passport = require('./config/passport');
-const { setUser } = require('./middlewares/auth');
+// const { setUser } = require('./middlewares/auth');
 db();
 const logger = require('./middlewares/logger');
 const cluster = require('cluster');
 const os = require('os');
+const nocache = require("nocache");
+
 
 // app.use(logger);
 
@@ -31,10 +33,11 @@ app.use(session({
     }
 }))
 
+app.use(nocache())
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(setUser);
+// app.use(setUser);
 app.set('view engine', 'ejs');
 app.set('views', [
     path.join(__dirname,'/views/user'), 

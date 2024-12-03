@@ -35,6 +35,7 @@ router.post('/resetPassword', userController.resetPassword);
 //home route
 router.get('/',userController.loadHomePage);
 router.get('/logout', userController.logout);
+router.get("/login",userController.loadLogin);
 
 //Profile routes
 router.get('/userProfile', userAuth, profileController.userProfile)
