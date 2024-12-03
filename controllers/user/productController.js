@@ -8,6 +8,7 @@ const Razorpay = require('razorpay');
 const Wishlist = require('../../models/wishlilstSchema');
 const Coupon = require('../../models/couponSchema');
 const Wallet = require('../../models/walletSchema');
+const Category = require('../../models/categorySchema');
 
 
 const addToCart = async (req, res) => {
@@ -15,7 +16,7 @@ const addToCart = async (req, res) => {
         const userId = req.session.user._id;
         const { productId, quantity, size } = req.query;
 
-        console.log(size)
+        console.log(size);
 
         const product = await Product.findById(productId);
         if (!product) {
@@ -28,11 +29,21 @@ const addToCart = async (req, res) => {
         }
 
         const qtyToAdd = parseInt(quantity, 10) || 1;
-        if (selectedSize.quantity < qtyToAdd) {
+
+        let cart = await Cart.findOne({ userId });
+        let existingQuantity = 0;
+
+        if (cart) {
+            const existingItem = cart.items.find(item => item.productId.toString() === productId && item.size === size);
+            if (existingItem) {
+                existingQuantity = existingItem.quantity;
+            }
+        }
+
+        if (selectedSize.quantity < existingQuantity + qtyToAdd) {
             return res.status(400).json({ message: 'Not enough stock for the selected size' });
         }
 
-        let cart = await Cart.findOne({ userId });
         if (!cart) {
             cart = new Cart({
                 userId,
@@ -73,7 +84,7 @@ const addToCart = async (req, res) => {
         }
 
         await cart.save();
-        console.log(cart)
+        console.log(cart);
         res.json({
             success: true,
             message: 'Product added to cart successfully',
@@ -216,15 +227,20 @@ const removeFromCart = async (req, res) => {
 
 const getShopPage = async (req, res) => {
     try {
-        const { search, sort, page = 1 } = req.query; 
-        const limit = 12; 
-        const skip = (page - 1) * limit;
+        const { search, sort, category, page = 1 } = req.query; 
+        const limit = 9; 
+        const currentPage = Math.max(parseInt(page, 10) || 1, 1); 
+        const skip = (currentPage - 1) * limit;
 
         let filter = {};
         let sortCriteria = {};
 
         if (search) {
             filter.productName = { $regex: search, $options: 'i' };
+        }
+
+        if (category) {
+            filter.category = category;
         }
 
         switch (sort) {
@@ -249,7 +265,10 @@ const getShopPage = async (req, res) => {
             default:
                 sortCriteria = {};
         }
+
         const totalProducts = await Product.countDocuments(filter);
+        const totalPages = Math.ceil(totalProducts / limit);
+
         const products = await Product.find(filter)
             .sort(sortCriteria)
             .skip(skip)
@@ -272,14 +291,16 @@ const getShopPage = async (req, res) => {
             };
         });
 
-        const totalPages = Math.ceil(totalProducts / limit);
+        const categories = await Category.find({});
 
         res.render('shop', {
             title: 'Shop',
             products: productsWithRatings,
             search,
             sort,
-            currentPage: parseInt(page, 10),
+            category,
+            categories,
+            currentPage,
             totalPages,
         });
     } catch (error) {
@@ -287,6 +308,7 @@ const getShopPage = async (req, res) => {
         res.status(500).json({ message: 'Something went wrong' });
     }
 };
+
 
 
 const submitReview = async (req, res) => {

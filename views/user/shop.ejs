@@ -71,6 +71,16 @@
                 <option value="za" <%= sort === 'za' ? 'selected' : '' %>>zZ - aA</option>
             </select>            
         </div>
+
+        <div class="col-md-6">
+            <select class="form-select" id="categoryFilter" onchange="applyCategory(this.value)">
+                <option value="" <%= !category ? 'selected' : '' %>>All Categories</option>
+                <% categories.forEach(cat => { %>
+                    <option value="<%= cat._id %>" <%= category == cat._id ? 'selected' : '' %>><%= cat.name %></option>
+                <% }) %>
+            </select>
+        </div>
+        
     </div>
 
     <div class="row" id="productGrid">
@@ -104,7 +114,7 @@
             <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
                 <a 
                     class="page-link btn-primary" 
-                    href="<%= currentPage > 1 ? `/shop?page=${currentPage - 1}&search=${search || ''}&sort=${sort || ''}` : '#' %>"
+                    href="<%= currentPage > 1 ? `/shop?page=${currentPage - 1}&search=${encodeURIComponent(search || '')}&sort=${sort || ''}` : '#' %>"
                 >
                     Previous
                 </a>
@@ -114,7 +124,7 @@
                 <li class="page-item <%= currentPage === i ? 'active' : '' %>">
                     <a 
                         class="page-link" 
-                        href="/shop?page=<%= i %>&search=<%= search || '' %>&sort=<%= sort || '' %>"
+                        href="/shop?page=<%= i %>&search=<%= encodeURIComponent(search || '') %>&sort=<%= sort || '' %>"
                     >
                         <%= i %>
                     </a>
@@ -124,13 +134,14 @@
             <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
                 <a 
                     class="page-link btn-primary" 
-                    href="<%= currentPage < totalPages ? `/shop?page=${currentPage + 1}&search=${search || ''}&sort=${sort || ''}` : '#' %>"
+                    href="<%= currentPage < totalPages ? `/shop?page=${currentPage + 1}&search=${encodeURIComponent(search || '')}&sort=${sort || ''}` : '#' %>"
                 >
                     Next
                 </a>
             </li>
         </ul>
-    </nav>    
+    </nav>
+       
           
 </div>
 
@@ -138,6 +149,12 @@
     function applySort(sortBy) {
         const url = new URL(window.location.href);
         url.searchParams.set('sort', sortBy);
+        window.location.href = url.toString();
+    }
+
+    function applyCategory(categoryId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('category', categoryId);
         window.location.href = url.toString();
     }
 

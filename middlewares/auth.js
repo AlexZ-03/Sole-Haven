@@ -71,22 +71,23 @@ const adminAuth = (req, res, next) => {
     })
 }
 
-// const setUser = async (req, res, next) => {
-//     if (req.user) {
-//         try {
-//             const user = await User.findById(req.user._id );
-//             if (user) {
-//                 res.locals.user = user;
-//             }
-//         } catch (error) {
-//             console.error('Error setting user in locals:', error);
-//         }
-//     }
-//     next();
-// };
+const setUser = async (req, res, next) => {
+    if (req.user) {
+        try {
+            const user = await User.findById(req.user._id );
+            if (user) {
+                res.locals.user = user;
+            }
+        } catch (error) {
+            console.error('Error setting user in locals:', error);
+        }
+    }
+    next();
+};
 
 
 module.exports = {
     userAuth,
     adminAuth,
+    setUser,
 }
