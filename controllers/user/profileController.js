@@ -47,7 +47,7 @@ const userProfile = async (req, res, next) => {
 
 const getOrders = async (req, res) => {
     try {
-        console.log('----------------getOrders-----------------')
+        console.log('----------------getOrders-----------------');
         const userId = req.session.user;
 
         if (!userId) {
@@ -56,16 +56,10 @@ const getOrders = async (req, res) => {
 
         const userData = await User.findById(userId).populate({
             path: 'orderHistory',
-            populate: [
-                {
-                    path: 'orderedItems.product',
-                    model: 'Product'
-                },
-                {
-                    path: 'address',
-                    model: 'Address'
-                }
-            ]
+            populate: {
+                path: 'orderedItems.product',
+                model: 'Product',
+            },
         });
 
         if (!userData) {
@@ -78,23 +72,8 @@ const getOrders = async (req, res) => {
         const orders = userData.orderHistory.map(order => {
             let deliveryAddress = 'Address not available';
 
-            if (order.address && order.address.address) {
-                console.log('Populated address:', order.address);
-
-                let tempAddress = order.address.address
-                console.log('under tempAddress :',order.address)
-            
-                const addressObj = order.address.address.find(addr => {
-                    console.log(addr._id);
-                    console.log(order.address._id);
-
-                    return addr._id.equals(order.address._id);
-                });
-                console.log(addressObj);
-                if (addressObj && !addressObj.isDeleted) {
-                    console.log(`${addressObj.house}, ${addressObj.landMark}, ${addressObj.city}, ${addressObj.state} - ${addressObj.pincode}, Phone: ${addressObj.phone}`)
-                    deliveryAddress = `${addressObj.house}, ${addressObj.landMark}, ${addressObj.city}, ${addressObj.state} - ${addressObj.pincode}, Phone: ${addressObj.phone}`;
-                }
+            if (order.address) {
+                deliveryAddress = `${order.address.house}, ${order.address.landMark}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}, Phone: ${order.address.phone}`;
             }
 
             return {
@@ -111,12 +90,12 @@ const getOrders = async (req, res) => {
                     productImage: item.product && item.product.productImage ? item.product.productImage[0] : null,
                     productId: item.product ? item.product._id : null,
                     price: item.price,
-                    quantity: item.quantity
+                    quantity: item.quantity,
                 })),
                 address: deliveryAddress,
                 canCancel: cancelableStatuses.includes(order.status),
                 canReturn: returnableStatuses.includes(order.status) && order.returnStatus === 'Not Requested',
-                returnStatus: order.returnStatus
+                returnStatus: order.returnStatus,
             };
         });
 
@@ -124,13 +103,15 @@ const getOrders = async (req, res) => {
 
         res.render('orders', {
             user: userData,
-            orders: orders
+            orders: orders,
         });
     } catch (error) {
         console.error('Error fetching orders:', error);
-        res.status(500).send('Server Error');
+        const isDev = process.env.NODE_ENV !== 'production';
+        res.status(500).send(isDev ? `Error fetching orders: ${error.message}` : 'Server Error');
     }
 };
+
 
 
 const cancelOrder = async (req, res) => {

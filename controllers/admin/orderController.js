@@ -22,12 +22,6 @@ const getOrderPage = async (req, res) => {
                 path: 'orderedItems.product',
                 select: 'productName'
             })
-            .populate({
-                path: 'address',
-                select: 'address',
-                match: { 'address.isDeleted': false },
-                options: { limit: 1 } 
-            })
             .exec();
 
         // console.log(orders);
