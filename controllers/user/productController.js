@@ -377,6 +377,7 @@ const razorpay = new Razorpay({
 
 const postCheckoutPage = async (req, res) => {
     try {
+        console.log('-----------postCheckoutPage--------------')
         if (!req.session.user) {
             return res.redirect('/login');
         }
@@ -388,33 +389,43 @@ const postCheckoutPage = async (req, res) => {
             return res.status(400).send('Payment method is required.');
         }
 
-        let addressId;
+        let addressData;
 
         if (selectedAddress === 'new') {
             if (!newName || !newPhone || !newPincode || !newHouse || !newCity || !newState) {
                 return res.status(400).send('Incomplete address details provided.');
             }
 
-            const newAddress = new Address({
-                userId,
-                address: [{
-                    addressType: 'Shipping',
-                    name: newName,
-                    phone: newPhone,
-                    pincode: newPincode,
-                    house: newHouse,
-                    city: newCity,
-                    state: newState,
-                    landMark: newLandMark,
-                    isDeleted: false
-                }]
-            });
-
-            await newAddress.save();
-            addressId = newAddress._id;
+            // Create a new address object for the order
+            addressData = {
+                name: newName,
+                phone: newPhone,
+                pincode: newPincode,
+                house: newHouse,
+                city: newCity,
+                state: newState,
+                landMark: newLandMark,
+            };
         } else {
-            addressId = selectedAddress;
+            console.log(req.body); 
+            console.log(selectedAddress); 
+
+            addressData = {
+                name: req.body[`addressName${selectedAddress}`],
+                phone: req.body[`addressPhone${selectedAddress}`],
+                pincode: req.body[`addressPincode${selectedAddress}`],
+                house: req.body[`addressHouse${selectedAddress}`],
+                city: req.body[`addressCity${selectedAddress}`],
+                state: req.body[`addressState${selectedAddress}`],
+                landMark: req.body[`addressLandMark${selectedAddress}`]
+            };
+
+            if (!addressData.name || !addressData.phone || !addressData.pincode || !addressData.house || !addressData.city || !addressData.state) {
+                return res.status(400).send('Address details are incomplete.');
+            }
         }
+
+        console.log(addressData);
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
@@ -438,12 +449,11 @@ const postCheckoutPage = async (req, res) => {
         let discount = totalAmount - finalAmount;
 
         if (paymentMethod === 'razorpay') {
-
             const razorpayOrder = await razorpay.orders.create({
                 amount: finalAmount * 100,
                 currency: 'INR',
                 receipt: `order_rcptid_${Date.now()}`,
-                notes: { userId, addressId }
+                notes: { userId, addressData }
             });
 
             const newOrder = new Order({
@@ -452,7 +462,7 @@ const postCheckoutPage = async (req, res) => {
                 totalPrice: totalAmount,
                 discount,
                 finalAmount,
-                address: addressId,
+                address: addressData,
                 invoiceDate: new Date(),
                 status: 'Pending',
                 razorpayOrderId: razorpayOrder.id,
@@ -462,13 +472,13 @@ const postCheckoutPage = async (req, res) => {
             });
 
             await newOrder.save();
-            
+
             const userData = await User.findById(userId);
 
-            delete req.session.coupon
+            delete req.session.coupon;
 
             return res.redirect(`/razorpay?orderId=${newOrder.orderId}&razorpayOrderId=${razorpayOrder.id}&razorpayKey=${process.env.RAZORPAY_ID}&finalAmount=${finalAmount}&userName=${userData.name}&userEmail=${userData.email}&userPhone=${userData.phone}`);
-          
+
         } else if (paymentMethod === 'cod') {
             const newOrder = new Order({
                 customer: userId,
@@ -476,7 +486,7 @@ const postCheckoutPage = async (req, res) => {
                 totalPrice: totalAmount,
                 discount,
                 finalAmount,
-                address: addressId,
+                address: addressData,
                 invoiceDate: new Date(),
                 status: 'Pending',
                 createdOn: new Date(),
@@ -493,7 +503,7 @@ const postCheckoutPage = async (req, res) => {
                         'sizes.size': item.size
                     },
                     {
-                        $inc: { 'sizes.$.quantity': -item.quantity } 
+                        $inc: { 'sizes.$.quantity': -item.quantity }
                     },
                     { new: true }
                 );
@@ -507,10 +517,10 @@ const postCheckoutPage = async (req, res) => {
 
             await Cart.updateOne({ userId }, { $set: { items: [] } });
 
-            delete req.session.coupon
+            delete req.session.coupon;
 
             res.redirect(`/orderConformed?message=Your order with Order ID: ${newOrder._id} has been confirmed successfully!&orderId=${newOrder._id}`);
-            
+
         } else if (paymentMethod === 'wallet') {
             const wallet = await Wallet.findOne({ user: userId });
 
@@ -531,7 +541,7 @@ const postCheckoutPage = async (req, res) => {
                 totalPrice: totalAmount,
                 discount,
                 finalAmount,
-                address: addressId,
+                address: addressData,
                 invoiceDate: new Date(),
                 status: 'Pending',
                 createdOn: new Date(),

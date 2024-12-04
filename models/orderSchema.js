@@ -46,9 +46,34 @@ const orderSchema = new Schema({
         required: true
     },
     address: {
-        type: Schema.Types.ObjectId,
-        ref: 'Address',
-        required: true
+        name : {
+            type : String,
+            required : true
+        },
+        city : {
+            type : String,
+            required : true
+        },
+        landMark : {
+            type: String,
+            required : true
+        },
+        state : {
+            type: String,
+            required : true
+        },
+        pincode : {
+            type : Number,
+            required : true
+        },
+        house : {
+          type : String,
+          required: true  
+        },
+        phone : {
+            type : String,
+            required : true
+        }
     },
     invoiceDate: {
         type: Date

@@ -16,6 +16,13 @@
                                 <%= address.house %>, <%= address.city %>, <%= address.state %>, <%= address.landMark %>, <%= address.pincode %><br>
                                 Phone: <%= address.phone %>
                             </label>
+                            <input type="hidden" name="addressName<%= address._id %>" value="<%= address.name %>">
+                            <input type="hidden" name="addressPhone<%= address._id %>" value="<%= address.phone %>">
+                            <input type="hidden" name="addressPincode<%= address._id %>" value="<%= address.pincode %>">
+                            <input type="hidden" name="addressHouse<%= address._id %>" value="<%= address.house %>">
+                            <input type="hidden" name="addressCity<%= address._id %>" value="<%= address.city %>">
+                            <input type="hidden" name="addressState<%= address._id %>" value="<%= address.state %>">
+                            <input type="hidden" name="addressLandMark<%= address._id %>" value="<%= address.landMark %>">
                         </div>
                     <% }); %>
                 <% } else { %>

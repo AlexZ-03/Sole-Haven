@@ -47,6 +47,7 @@ const userProfile = async (req, res, next) => {
 
 const getOrders = async (req, res) => {
     try {
+        console.log('----------------getOrders-----------------')
         const userId = req.session.user;
 
         if (!userId) {
@@ -74,27 +75,50 @@ const getOrders = async (req, res) => {
         const cancelableStatuses = ['Pending', 'Processing', 'Shipped'];
         const returnableStatuses = ['Delivered'];
 
-        const orders = userData.orderHistory.map(order => ({
-            orderId: order.orderId,
-            status: order.status,
-            total: order.totalPrice,
-            discount: order.discount,
-            finalAmount: order.finalAmount,
-            invoiceDate: order.invoiceDate,
-            paymentMethod: order.paymentMethod,
-            paymentStatus: order.paymentStatus,
-            orderedItems: order.orderedItems.map(item => ({
-                productName: item.product ? item.product.productName : null,
-                productImage: item.product && item.product.productImage ? item.product.productImage[0] : null,
-                productId: item.product ? item.product._id : null,
-                price: item.price,
-                quantity: item.quantity
-            })),
-            address: order.address ? `${order.address.street}, ${order.address.city}, ${order.address.state}` : 'Address not available',
-            canCancel: cancelableStatuses.includes(order.status),
-            canReturn: returnableStatuses.includes(order.status) && order.returnStatus === 'Not Requested',
-            returnStatus: order.returnStatus
-        }));
+        const orders = userData.orderHistory.map(order => {
+            let deliveryAddress = 'Address not available';
+
+            if (order.address && order.address.address) {
+                console.log('Populated address:', order.address);
+
+                let tempAddress = order.address.address
+                console.log('under tempAddress :',order.address)
+            
+                const addressObj = order.address.address.find(addr => {
+                    console.log(addr._id);
+                    console.log(order.address._id);
+
+                    return addr._id.equals(order.address._id);
+                });
+                console.log(addressObj);
+                if (addressObj && !addressObj.isDeleted) {
+                    console.log(`${addressObj.house}, ${addressObj.landMark}, ${addressObj.city}, ${addressObj.state} - ${addressObj.pincode}, Phone: ${addressObj.phone}`)
+                    deliveryAddress = `${addressObj.house}, ${addressObj.landMark}, ${addressObj.city}, ${addressObj.state} - ${addressObj.pincode}, Phone: ${addressObj.phone}`;
+                }
+            }
+
+            return {
+                orderId: order.orderId,
+                status: order.status,
+                total: order.totalPrice,
+                discount: order.discount,
+                finalAmount: order.finalAmount,
+                invoiceDate: order.invoiceDate,
+                paymentMethod: order.paymentMethod,
+                paymentStatus: order.paymentStatus,
+                orderedItems: order.orderedItems.map(item => ({
+                    productName: item.product ? item.product.productName : null,
+                    productImage: item.product && item.product.productImage ? item.product.productImage[0] : null,
+                    productId: item.product ? item.product._id : null,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                address: deliveryAddress,
+                canCancel: cancelableStatuses.includes(order.status),
+                canReturn: returnableStatuses.includes(order.status) && order.returnStatus === 'Not Requested',
+                returnStatus: order.returnStatus
+            };
+        });
 
         console.log(orders);
 
@@ -107,6 +131,7 @@ const getOrders = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
 
 const cancelOrder = async (req, res) => {
     try {
