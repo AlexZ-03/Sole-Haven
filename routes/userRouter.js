@@ -14,7 +14,7 @@ router.post('/signup', userController.signUp);
 router.post('/verify-otp', userController.verifyOtp);
 router.post('/resend-otp', userController.resendOtp);
 router.get('/auth/google',passport.authenticate('google', {scope:['profile','email']}));
-router.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/signup'}), (req, res) => {
+router.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/login'}), (req, res) => {
         req.session.user = { 
             _id: req.user._id, 
             name: req.user.name, 
@@ -40,6 +40,7 @@ router.get("/login",userController.loadLogin);
 //Profile routes
 router.get('/userProfile', userAuth, profileController.userProfile)
 router.post('/profileEdit', userAuth, profileController.editProfile);
+router.post('/validateCurrentPassword', userAuth, profileController.validateCurrentPassword);
 router.get('/manageAddress', userAuth, profileController.getAddressPage);
 router.post('/addAddress', userAuth, profileController.addAddress);
 router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);

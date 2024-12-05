@@ -342,6 +342,7 @@ const submitReview = async (req, res) => {
 
 const getCheckoutPage = async (req, res) => {
     try {
+        console.log('-----getCheckoutPage--------')
         if (!req.session.user) {
             return res.redirect('/login');
         }
@@ -356,13 +357,15 @@ const getCheckoutPage = async (req, res) => {
         const addressData = await Address.findOne({ userId });
         const addresses = addressData ? addressData.address.filter(addr => !addr.isDeleted) : [];
 
+        const coupons = await Coupon.find({ status: 'Active' });
 
         res.render('checkout', {
             title: 'Checkout',
             cart: items,
             totalAmount: totalAmount,
             user: req.session.user, 
-            addresses, 
+            addresses,
+            coupons,
         });
     } catch (error) {
         console.error('Error fetching checkout page:', error);
@@ -587,6 +590,7 @@ const postCheckoutPage = async (req, res) => {
 
 const applyCoupon = async (req, res) => {
     try {
+        console.log('---------applyCoupon---------')
         const userId = req.session.user._id;
         const { couponCode, totalAmount } = req.body;
 
@@ -655,6 +659,22 @@ const applyCoupon = async (req, res) => {
                 },
             });
         }
+
+        const isBelowMin = coupon.minPurchaseAmount && totalAmount < coupon.minPurchaseAmount;
+        const isAboveMax = coupon.maxPurchaseAmount && totalAmount > coupon.maxPurchaseAmount;
+
+        if (isBelowMin || isAboveMax) {
+            console.log("Total amount out of range:", { totalAmount, min: coupon.minPurchaseAmount, max: coupon.maxPurchaseAmount });
+            return res.status(400).json({
+                success: false,
+                alert: {
+                    title: "Amount Mismatch",
+                    text: `Coupon is valid only for purchases between ₹${coupon.minPurchaseAmount || 0} and ₹${coupon.maxPurchaseAmount || Infinity}.`,
+                    icon: "info",
+                },
+            });
+        }
+
 
         let discount = 0;
         if (coupon.discountType === "fixed") {

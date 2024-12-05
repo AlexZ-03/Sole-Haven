@@ -125,6 +125,96 @@
     .filter-section button:hover {
         background-color: #0056b3;
     }
+
+    /* Existing styles for the filter section */
+    .filter-section, .report-summary, .report-download, .sales-table {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-section form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+    }
+
+    /* Styling for the error message */
+    .error-message {
+        color: red;               /* Red color for error message */
+        font-size: 12px;           /* Slightly smaller text */
+        margin-top: 5px;           /* Space above the error message */
+        display: block;            /* Ensure it's displayed below the input field */
+    }
+
+    /* Other existing styles for the form elements */
+    .filter-section input,
+    .filter-section select,
+    .filter-section button {
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .filter-section button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .filter-section button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Adjust form group layout */
+    .filter-section .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    /* Label styles */
+    .filter-section .form-group label {
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    /* Date input and select styling */
+    .filter-section input[type="date"], 
+    .filter-section select {
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .filter-section button {
+        padding: 10px 20px;
+        font-size: 14px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 25px;
+    }
+
+    .filter-section button:hover {
+        background-color: #0056b3;
+    }
+
 </style>
 
 <main class="right mt-5"> 
@@ -136,8 +226,12 @@
             <form action="/admin/filterSales" method="GET">
                 <label for="startDate">Custom Date Range:</label>
                 <input type="date" id="startDate" name="startDate" value="<%= startDate %>">
+                <span id="startDateError" class="error-message"></span>
+        
                 <label for="endDate">To:</label>
                 <input type="date" id="endDate" name="endDate" value="<%= endDate %>">
+                <span id="endDateError" class="error-message"></span>
+
                 <label for="presetRange">Preset Ranges:</label>
                 <select id="presetRange" name="presetRange">
                     <option value="1-day">1 Day</option>
@@ -146,9 +240,8 @@
                 </select>
                 <button type="submit">Apply Filter</button>
             </form>            
-        </section>
+        </section>        
 
-        <!-- Report Summary Section -->
         <section class="report-summary">
             <h4 class="section-header">Overall Sales Summary</h4>
             <ul>
@@ -200,61 +293,119 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayISOString = today.toISOString().split('T')[0];  // Current date in YYYY-MM-DD format
 
-        // Get values passed from the backend (from the form fields)
-        let startDate = document.getElementById('startDate').value || "";
-        let endDate = document.getElementById('endDate').value || "";
+    let startDate = document.getElementById('startDate').value || "";
+    let endDate = document.getElementById('endDate').value || "";
 
-        // If no values are set, set both startDate and endDate to today's date
-        if (!startDate && !endDate) {
-            startDate = today;
-            endDate = today;
-            document.getElementById('startDate').value = startDate;
-            document.getElementById('endDate').value = endDate;
+    if (!startDate && !endDate) {
+        startDate = todayISOString;
+        endDate = todayISOString;
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('endDate').value = endDate;
+    }
+
+    const startDateField = document.getElementById('startDate');
+    const endDateField = document.getElementById('endDate');
+    const startDateError = document.getElementById('startDateError');
+    const endDateError = document.getElementById('endDateError');
+
+    startDateField.addEventListener('change', validateDate);
+    endDateField.addEventListener('change', validateDate);
+
+    function validateDate() {
+        const startDateValue = new Date(startDateField.value);
+        const endDateValue = new Date(endDateField.value);
+        
+        let startDateValid = true;
+        let endDateValid = true;
+
+        startDateError.textContent = '';
+        endDateError.textContent = '';
+
+        if (startDateValue > new Date()) {
+            startDateValid = false;
+            startDateError.textContent = 'Start date cannot be in the future.';
         }
 
-        const presetRange = document.getElementById('presetRange');
-        presetRange.addEventListener('change', () => {
-            const startDateField = document.getElementById('startDate');
-            const endDateField = document.getElementById('endDate');
-            
-            // Clear date fields if a preset range is selected
-            if (presetRange.value !== '') {
-                startDateField.value = '';
-                endDateField.value = '';
+        if (endDateValue > new Date()) {
+            endDateValid = false;
+            endDateError.textContent = 'End date cannot be in the future.';
+        }
+
+        if (endDateValue < startDateValue) {
+            endDateValid = false;
+            endDateError.textContent = 'End date cannot be earlier than start date.';
+        }
+
+        if (startDateValid && endDateValid) {
+            document.querySelector('button[type="submit"]').disabled = false;
+        } else {
+            document.querySelector('button[type="submit"]').disabled = true;
+        }
+    }
+
+    const presetRange = document.getElementById('presetRange');
+    presetRange.addEventListener('change', () => {
+        const selectedPreset = presetRange.value;
+        let newStartDate = "";
+        let newEndDate = todayISOString;
+
+        switch (selectedPreset) {
+            case '1-day':
+                newStartDate = todayISOString;
+                break;
+            case '7-days':
+                newStartDate = new Date(today.setDate(today.getDate() - 7)).toISOString().split('T')[0];
+                break;
+            case '1-month':
+                newStartDate = new Date(today.setMonth(today.getMonth() - 1)).toISOString().split('T')[0];
+                break;
+            default:
+                newStartDate = "";
+                newEndDate = "";
+        }
+
+        startDateField.value = newStartDate;
+        endDateField.value = newEndDate;
+
+
+        startDateError.textContent = '';
+        endDateError.textContent = '';
+
+        validateDate();
+    });
+});
+
+
+document.getElementById('downloadPdf').addEventListener('click', async function () {
+    const startDate = document.getElementById('startDate').value || new Date().toISOString().split('T')[0]; 
+    const endDate = document.getElementById('endDate').value || new Date().toISOString().split('T')[0];
+
+    try {
+        const response = await fetch(`/admin/downloadSalesPDF?startDate=${startDate}&endDate=${endDate}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
-    });
 
+        if (response.ok) {
+            const blob = await response.blob();
 
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'sales-report.pdf';
 
-    document.getElementById('downloadPdf').addEventListener('click', async function () {
-        const startDate = document.getElementById('startDate').value || new Date().toISOString().split('T')[0]; 
-        const endDate = document.getElementById('endDate').value || new Date().toISOString().split('T')[0];
-        try {
-            const response = await fetch(`/admin/downloadSalesPDF?startDate=${startDate}&endDate=${endDate}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const blob = await response.blob();
-
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'sales-report.pdf';
-
-                link.click();
-            } else {
-                alert('Failed to download the PDF: ' + response.statusText);
-            }
-        } catch (error) {
-            alert('Error downloading the PDF: ' + error.message);
+            link.click();
+        } else {
+            alert('Failed to download the PDF: ' + response.statusText);
         }
-    });
+    } catch (error) {
+        alert('Error downloading the PDF: ' + error.message);
+    }
+});
 </script>
 
 <%- include("../../views/partials/admin/footer") %>

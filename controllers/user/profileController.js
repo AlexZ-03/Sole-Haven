@@ -210,33 +210,69 @@ const returnOrder = async(req, res) => {
     }
 }
 
-const editProfile = async (req, res) => {
+const validateCurrentPassword = async (req, res) => {
     try {
-        const userId = req.session.user; 
-        const { email, newPassword, currentPassword } = req.body;
+        const userId = req.session.user;
+        const { currentPassword } = req.body;
 
         const userData = await User.findById(userId);
         if (!userData) {
-            return res.status(404).json({ error: "User not found" });
+            return res.status(404).json({ error: 'User not found.' });
         }
 
         const isPasswordValid = await bcrypt.compare(currentPassword, userData.password);
         if (!isPasswordValid) {
-            return res.status(400).json({ error: "Current password is incorrect" });
+            return res.status(400).json({ error: 'Current password is incorrect.' });
         }
 
-        userData.email = email;
+        res.status(200).json({ message: 'Password validated.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error. Please try again later.' });
+    }
+};
+
+const editProfile = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const { newPassword } = req.body;
+
+        if (!userId) {
+            req.session.destroy((err) => {
+                if (err) {
+                    console.log("Error while logout:", err.message);
+                    return res.status(500).json({ error: "Failed to log out. Please try again later." });
+                }
+                console.log('Session Destroyed');
+                return res.status(401).json({ error: "Session expired. Please log in again." });
+            });
+            return;
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            return res.status(404).json({ error: "User not found." });
+        }
 
         if (newPassword) {
+            const passPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passPattern.test(newPassword)) {
+                return res.status(400).json({
+                    error: "Password must be at least 8 characters long and include a letter, a number, and a special character.",
+                });
+            }
+
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             userData.password = hashedPassword;
+            console.log('Password Changed');
         }
 
         await userData.save();
-        res.redirect('/userProfile');
+
+        res.status(200).json({ message: "Password changed successfully." });
     } catch (error) {
-        console.error(error);
-        res.redirect('/pageNotFound');
+        console.error("Error while editing profile:", error);
+        res.status(500).json({ error: "Internal server error. Please try again later." });
     }
 };
 
@@ -360,4 +396,5 @@ module.exports = {
     cancelOrder,
     returnOrder,
     getWalletPage,
+    validateCurrentPassword,
 }

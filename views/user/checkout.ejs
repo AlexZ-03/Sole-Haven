@@ -103,11 +103,18 @@
                 <div id="couponAppliedFeedback" style="display: none;" class="text-success text-end mb-2"></div>
                 <h5 class="text-end">Total: ₹<span id="totalAmount"><%= total.toFixed(2) %></span></h5>
                 <hr>
-                <h4>Apply Coupon</h4>
-                <div class="input-group mb-3" id="couponSection">
-                    <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code">
-                    <button type="button" class="btn btn-outline-secondary" id="applyCouponBtn">Apply</button>
-                </div>
+                <div id="couponSection" class="mb-3">
+                    <select id="availableCoupons" class="form-select">
+                        <option value="" disabled selected>Select a coupon</option>
+                        <% coupons.forEach(coupon => { %>
+                            <option value="<%= coupon.code %>">
+                                <%= coupon.code %> - <%= coupon.discount %>%
+                            </option>
+                        <% }); %>
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary mt-3" id="applyCouponBtn">Apply</button>
+                    <button type="button" class="btn btn-outline-danger mt-3" id="removeCouponBtn" style="display: none;">Remove</button>
+                </div>                
                 <hr>
                 <hr>
                 <h4>Payment Method</h4>
@@ -175,15 +182,22 @@
         });
     });
 
-    document.getElementById('applyCouponBtn').addEventListener('click', async () => {
-        const couponCode = document.getElementById('couponCode').value.trim();
-        const totalElement = document.getElementById('totalAmount');
-        const currentTotal = parseFloat(totalElement.textContent);
 
-        if (!couponCode) {
+    document.addEventListener('DOMContentLoaded', () => {
+    const couponSelect = document.getElementById('availableCoupons');
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const removeCouponBtn = document.getElementById('removeCouponBtn');
+    const totalElement = document.getElementById('totalAmount');
+    const feedbackElement = document.getElementById('couponAppliedFeedback');
+    let originalTotal = parseFloat(totalElement.textContent);
+
+    applyCouponBtn.addEventListener('click', async () => {
+        const selectedCouponCode = couponSelect.value.trim();
+
+        if (!selectedCouponCode) {
             Swal.fire({
-                title: "Missing Coupon Code",
-                text: "Please enter a coupon code before applying.",
+                title: "No Coupon Selected",
+                text: "Please select a coupon from the dropdown before applying.",
                 icon: "warning",
             });
             return;
@@ -193,38 +207,31 @@
             const response = await fetch('/applyCoupon', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ couponCode, totalAmount: currentTotal }),
+                body: JSON.stringify({ couponCode: selectedCouponCode, totalAmount: originalTotal }),
             });
 
             const data = await response.json();
 
-            if (response.status === 400) {
-                Swal.fire({
-                    title: 'Invalid Coupon',
-                    text: 'The coupon code entered is invalid.',
-                    icon: 'error',
-                });
-                return;
-            }
+            if (!response.ok) {
+                const alert = data.alert || {
+                    title: "Error",
+                    text: "An unexpected error occurred.",
+                    icon: "error",
+                };
 
-            if (data.alert) {
-                Swal.fire(data.alert);
+                Swal.fire(alert.title, alert.text, alert.icon);
+                return;
             }
 
             if (data.success) {
                 totalElement.textContent = data.finalAmount.toFixed(2);
 
-                const feedbackElement = document.getElementById('couponAppliedFeedback');
                 feedbackElement.style.display = 'block';
                 feedbackElement.textContent = `Coupon applied! Discount of ₹${data.discount.toFixed(2)} applied.`;
 
-                const couponSection = document.getElementById('couponSection');
-                couponSection.style.display = 'none';
-
-                const couponInput = document.getElementById('couponCode');
-                const applyBtn = document.getElementById('applyCouponBtn');
-                couponInput.disabled = true;
-                applyBtn.disabled = true;
+                couponSelect.disabled = true;
+                applyCouponBtn.style.display = 'none';
+                removeCouponBtn.style.display = 'inline-block';
             }
         } catch (error) {
             console.error('Error:', error);
@@ -235,4 +242,19 @@
             });
         }
     });
+
+    removeCouponBtn.addEventListener('click', () => {
+        // Reset the total amount
+        totalElement.textContent = originalTotal.toFixed(2);
+
+        // Hide feedback and reset coupon section
+        feedbackElement.style.display = 'none';
+        feedbackElement.textContent = '';
+
+        couponSelect.disabled = false;
+        couponSelect.value = "";
+        applyCouponBtn.style.display = 'inline-block';
+        removeCouponBtn.style.display = 'none';
+    });
+});
 </script>

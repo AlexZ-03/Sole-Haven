@@ -39,23 +39,31 @@
                 <form action="/profileEdit" method="POST" id="editProfileForm">
                     <div class="form-group">
                         <label for="name" class="text-dark">Name</label>
-                        <input id="name" type="text" name="name" value="<%= user.name %>" >
-                        <span id="nameError" class="error"></span> 
+                        <input id="name" type="text" name="name" value="<%= user.name %>" readonly>
                     </div>
                     <div class="form-group full-width">
                         <label for="email">Email</label>
-                        <input id="email" type="email" name="email" value="<%= user.email %>">
-                        <span id="emailError" class="error"></span>
+                        <input id="email" type="email" name="email" value="<%= user.email %>" readonly>
                     </div>
-                    <div class="form-group full-width">
+                    <div class="form-group full-width" id="currentPasswordSection">
                         <label for="current-password">Current Password</label>
-                        <input id="current-password" type="password" name="currentPassword" >
-                        <span id="currentPasswordError" class="error"></span> 
+                        <input id="current-password" type="password" name="currentPassword">
+                        <span id="currentPasswordError" class="error" style="color: red;"></span>
+                        <% if (typeof errorMessage !== 'undefined') { %>
+                            <div class="error-message" style="color: red;"><%= errorMessage %></div>
+                        <% } %>
                     </div>
-                    <div class="form-group full-width">
-                        <label for="new-password">New Password</label>
-                        <input id="new-password" type="password" name="newPassword" >
-                        <span id="newPasswordError" class="error"></span> 
+                    <div id="newPasswordSection" style="display: none;">
+                        <div class="form-group full-width">
+                            <label for="new-password">New Password</label>
+                            <input id="new-password" type="password" name="newPassword">
+                            <span id="newPasswordError" class="error" style="color: red;"></span>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input id="confirm-password" type="password" name="confirmPassword">
+                            <span id="confirmPasswordError" class="error" style="color: red;"></span>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button class="cancel" type="button">Cancel</button>
@@ -67,54 +75,126 @@
     </div>
     <% } %>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('editProfileForm');
-        const nameError = document.getElementById('nameError');
-        const emailError = document.getElementById('emailError');
-        const currentPasswordError = document.getElementById('currentPasswordError');
-        const newPasswordError = document.getElementById('newPasswordError');
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('editProfileForm');
+    const currentPasswordError = document.getElementById('currentPasswordError');
+    const newPasswordError = document.getElementById('newPasswordError');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    const currentPasswordSection = document.getElementById('currentPasswordSection');
+    const newPasswordSection = document.getElementById('newPasswordSection');
 
-        form.addEventListener('submit', function (event) {
-            nameError.textContent = '';
-            emailError.textContent = '';
-            currentPasswordError.textContent = '';
-            newPasswordError.textContent = '';
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
 
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const currentPassword = document.getElementById('current-password').value.trim();
-            const newPassword = document.getElementById('new-password').value.trim();
+        // Reset error messages
+        currentPasswordError.textContent = '';
+        newPasswordError.textContent = '';
+        confirmPasswordError.textContent = '';
 
-            let isValid = true;
+        const currentPassword = document.getElementById('current-password').value.trim();
+        const newPassword = document.getElementById('new-password').value.trim();
+        const confirmPassword = document.getElementById('confirm-password').value.trim();
 
-            if (name.length < 3) {
-                nameError.textContent = "Name must be at least 2 characters long.";
-                isValid = false;
-            }
+        let isValid = true;
 
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email)) {
-                emailError.textContent = "Please enter a valid email address.";
-                isValid = false;
-            }
-
+        // Validate current password (server-side)
+        if (currentPasswordSection.style.display !== 'none') {
             if (currentPassword.length === 0) {
                 currentPasswordError.textContent = "Please enter your current password.";
                 isValid = false;
             }
 
+            if (isValid) {
+                try {
+                    // Validate the current password on the server
+                    const response = await fetch('/validateCurrentPassword', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ currentPassword }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // If the current password is valid, show the new password section
+                        currentPasswordSection.style.display = 'none';
+                        newPasswordSection.style.display = 'block';
+                        return; // Allow user to proceed to the new password
+                    } else {
+                        // Show an error if the current password is invalid
+                        currentPasswordError.textContent = result.error || 'Current password is incorrect.';
+                        isValid = false;
+                    }
+                } catch (error) {
+                    console.error('Error validating current password:', error);
+                    currentPasswordError.textContent = 'Unable to validate password. Please try again later.';
+                    isValid = false;
+                }
+            }
+        }
+
+        // Validate new password
+        if (newPasswordSection.style.display === 'block') {
             const passPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
             if (newPassword.length > 0 && !passPattern.test(newPassword)) {
-                newPasswordError.textContent = "Password must be at least 8 characters long and include a letter, a number, and a special character.";
+                newPasswordError.textContent =
+                    'Password must be at least 8 characters long and include a letter, a number, and a special character.';
                 isValid = false;
             }
-
-            if (!isValid) {
-                event.preventDefault();
+            if (newPassword !== confirmPassword) {
+                confirmPasswordError.textContent = 'Passwords do not match.';
+                isValid = false;
             }
-        });
+        }
+
+        if (isValid && newPasswordSection.style.display === 'block') {
+            try {
+                const response = await fetch('/profileEdit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: result.message || 'Your password has been changed successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                    }).then(() => {
+                        window.location.href = '/userProfile';
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: result.error || 'Something went wrong.',
+                        icon: 'error',
+                        confirmButtonText: 'Try Again',
+                    });
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Unable to change the password. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            }
+        }
     });
+});
 </script>
 
 
