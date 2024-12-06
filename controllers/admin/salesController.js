@@ -5,7 +5,7 @@ const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
 const Wallet = require('../../models/walletSchema')
 
-const Excel = require('exceljs');
+const ExcelJS  = require('exceljs');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
@@ -318,6 +318,94 @@ const generatePDF = async (res, orders, dateFilter, startDate, endDate) => {
 };
 
 
+const downloadSalesExcel = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        console.log(start, end)
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return res.status(400).send('Invalid date format. Please provide valid startDate and endDate.');
+        }
+
+        const orders = await Order.find({
+            createdOn: { $gte: start, $lte: end },
+        }).populate('orderedItems.product');
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Sales Report');
+
+        worksheet.columns = [
+            { header: 'SI', key: 'si', width: 10 },
+            { header: 'Order ID', key: 'orderId', width: 20 },
+            { header: 'Date', key: 'date', width: 20 },
+            { header: 'Product', key: 'product', width: 30 },
+            { header: 'SKU', key: 'sku', width: 20 },
+            { header: 'Color', key: 'color', width: 15 },
+            { header: 'Regular Price', key: 'regularPrice', width: 15 },
+            { header: 'Sale Price', key: 'salePrice', width: 15 },
+            { header: 'Quantity', key: 'quantity', width: 10 },
+            { header: 'Order Status', key: 'status', width: 15 },
+            { header: 'Discount', key: 'discount', width: 15 },
+            { header: 'Net Price', key: 'netPrice', width: 15 },
+        ];
+
+        let si = 1;
+
+        orders.forEach(order => {
+            order.orderedItems.forEach(item => {
+                const regularPrice = item.product.regularPrice * item.quantity;
+                const salePrice = item.price * item.quantity;
+                const discount = (item.product.regularPrice - item.product.salePrice) * item.quantity;
+                const netPrice = salePrice;
+
+                const row = worksheet.addRow({
+                    si: si++,
+                    orderId: order.orderId?.toString().slice(-6) || 'N/A',
+                    date: order.createdOn ? order.createdOn.toLocaleString() : 'N/A',
+                    product: item.product.productName || 'N/A',
+                    sku: item.product._id.toString().slice(-6) || 'N/A',
+                    color: item.product.color || 'N/A',
+                    regularPrice: regularPrice.toFixed(2),
+                    salePrice: salePrice.toFixed(2),
+                    quantity: item.quantity || 0,
+                    status: order.status || 'N/A',
+                    discount: discount.toFixed(2),
+                    netPrice: netPrice.toFixed(2),
+                });
+                row.eachCell(cell => {
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                });
+            });
+        });
+
+        worksheet.getRow(1).eachCell(cell => {
+            cell.font = { bold: true };
+        });
+
+        res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=sales-report-${startDate}-to-${endDate}.xlsx`
+        );
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('Error generating Excel file:', error);
+        res.status(500).send('Error generating Excel file');
+    }
+};
+
 
 
 
@@ -326,4 +414,5 @@ module.exports = {
     getSalesPage,
     applyFilter,
     downloadSalesPDF,
+    downloadSalesExcel,
 };

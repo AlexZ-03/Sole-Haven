@@ -107,14 +107,32 @@ const getCartPage = async (req, res) => {
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
 
-
         const items = cart && cart.items.length > 0 ? cart.items : [];
-        const totalPrice = items.reduce((acc, item) => acc + item.totalPrice, 0);
+
+        const itemsWithStockStatus = items.map(item => {
+            const product = item.productId;
+
+            const selectedSize = product.sizes.find(sizeObj => sizeObj.size == item.size);
+
+            const isOutOfStock = !selectedSize || selectedSize.quantity < item.quantity;
+
+            return {
+                ...item.toObject(),
+                isOutOfStock,
+                stockMessage: isOutOfStock
+                    ? `Out of stock for size ${item.size}`
+                    : `In stock`,
+            };
+        });
+        const totalPrice = itemsWithStockStatus.reduce((acc, item) => acc + item.totalPrice, 0);
+
+        const isOutOfStock = itemsWithStockStatus.some(item => item.isOutOfStock);
 
         res.render('cart', {
             title: 'Your Cart',
-            cart: items,
+            cart: itemsWithStockStatus,
             totalPrice: totalPrice,
+            isOutOfStock,
             message: items.length > 0 ? '' : 'Your cart is empty.',
         });
     } catch (error) {
@@ -122,7 +140,6 @@ const getCartPage = async (req, res) => {
         res.redirect('/pageNotFound');
     }
 };
-
 
 const updateCart = async (req, res) => {
     try {
@@ -352,6 +369,8 @@ const getCheckoutPage = async (req, res) => {
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         const items = cart && cart.items.length > 0 ? cart.items : [];
 
+        console.log(cart)
+        
         const totalAmount = items.reduce((acc, item) => acc + item.totalPrice, 0);
 
         const addressData = await Address.findOne({ userId });

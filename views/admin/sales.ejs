@@ -255,7 +255,7 @@
         <section class="report-download">
             <h4 class="section-header">Download Report</h4>
             <button class="btn btn-secondary" id="downloadPdf" aria-label="Download Sales Report as PDF">Download PDF</button>
-            <a href="/admin/downloadSalesExcel" class="btn btn-secondary" id="downloadExcel" aria-label="Download Sales Report as Excel">Download Excel</a>
+            <button class="btn btn-secondary" id="downloadExcel" aria-label="Download Sales Report as Excel">Download Excel</button>
         </section>
         
         <section class="sales-table">
@@ -404,6 +404,34 @@ document.getElementById('downloadPdf').addEventListener('click', async function 
         }
     } catch (error) {
         alert('Error downloading the PDF: ' + error.message);
+    }
+});
+
+document.getElementById('downloadExcel').addEventListener('click', async function () {
+    const startDate = document.getElementById('startDate').value || new Date().toISOString().split('T')[0]; 
+    const endDate = document.getElementById('endDate').value || new Date().toISOString().split('T')[0];
+
+    try {
+        const response = await fetch(`/admin/downloadSalesExcel?startDate=${startDate}&endDate=${endDate}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'sales-report.xlsx';
+
+            link.click();
+        } else {
+            alert('Failed to download the Excel: ' + response.statusText);
+        }
+    } catch (error) {
+        alert('Error downloading the Excel: ' + error.message);
     }
 });
 </script>

@@ -45,6 +45,7 @@
                         <label for="email">Email</label>
                         <input id="email" type="email" name="email" value="<%= user.email %>" readonly>
                     </div>
+                    <% if(user.password){ %>
                     <div class="form-group full-width" id="currentPasswordSection">
                         <label for="current-password">Current Password</label>
                         <input id="current-password" type="password" name="currentPassword">
@@ -69,6 +70,9 @@
                         <button class="cancel" type="button">Cancel</button>
                         <button class="save" type="submit">Save Changes</button>
                     </div>
+                    <% } else { %>
+                        <a href="/forgotPassword">Create Password</a>
+                    <% } %>
                 </form>
             </div>
         </div>

@@ -13,6 +13,7 @@
                 <th>Quantity</th>
                 <th>Price</th>
                 <th>Subtotal</th>
+                <th>Stock Status</th>
                 <th>Remove</th>
             </tr>
         </thead>
@@ -25,7 +26,13 @@
                                 <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>" 
                                  style="width: 60px; height: 60px; object-fit: cover;"></a>
                         </td>
-                        <td><%= item.productId.productName %></td>
+                        <td>
+                            <%= item.productId.productName %>
+                            <br>
+                            <small class="<%= item.isOutOfStock ? 'text-danger' : 'text-success' %>">
+                                <%= item.stockMessage %>
+                            </small>
+                        </td>
                         <td><%= item.size %></td>
                         <td>
                             <form action="/cart/update/<%= item._id %>" method="POST">
@@ -49,6 +56,9 @@
                         </td>
                         <td>₹<%= item.price.toFixed(2) %></td>
                         <td>₹<%= (item.price * item.quantity).toFixed(2) %></td>
+                        <td>
+                            <%= item.isOutOfStock ? 'Out of Stock' : 'In Stock' %>
+                        </td>
                         <td>
                             <!-- Remove Item -->
                             <form action="/cart/remove/<%= item._id %>" method="POST">
@@ -76,8 +86,12 @@
     <!-- Continue Shopping and Checkout Options -->
     <div class="d-flex justify-content-between mt-4">
         <a href="/shop" class="btn btn-secondary">Continue Shopping</a>
-        <% if (cart.length > 0) { %>
+        <% if (cart.length > 0 && !isOutOfStock) { %>
             <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
+        <% } else if (isOutOfStock) { %>
+            <button class="btn btn-danger" disabled>Checkout Not Available (Out of Stock)</button>
+        <% } else { %>
+            <button class="btn btn-secondary" disabled>Your Cart is Empty</button>
         <% } %>
     </div>
 </div>

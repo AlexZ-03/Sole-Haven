@@ -81,7 +81,8 @@ router.delete("/coupon/deleteCoupon/:couponId",adminAuth,couponController.delete
 //Sales management
 router.get('/sales', adminAuth, salesController.getSalesPage);
 router.get('/filterSales', adminAuth, salesController.applyFilter);
-router.get('/downloadSalesPDF', adminAuth, salesController.downloadSalesPDF)
+router.get('/downloadSalesPDF', adminAuth, salesController.downloadSalesPDF);
+router.get('/downloadSalesExcel', adminAuth, salesController.downloadSalesExcel);
 
 
 
