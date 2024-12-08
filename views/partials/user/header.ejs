@@ -75,17 +75,17 @@
 
                         <!-- User Account Links -->
                         <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="/cart">
-                                    <i class="fa-solid fa-cart-shopping"></i>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="/wishlist">
-                                    <i class="fa-solid fa-heart"></i>
-                                </a>
-                            </li>
                             <% if (locals.user) { %>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white" href="/cart">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white" href="/wishlist">
+                                        <i class="fa-solid fa-heart"></i>
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-white" href="/userProfile">
                                         <i class="fa-solid fa-user"></i> <%=locals.user.name %>

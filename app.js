@@ -13,6 +13,7 @@ const logger = require('./middlewares/logger');
 const cluster = require('cluster');
 const os = require('os');
 const nocache = require("nocache");
+const flash = require('connect-flash');
 
 
 // app.use(logger);
@@ -32,6 +33,12 @@ app.use(session({
         maxAge: 72*60*60*1000
     }
 }))
+
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.messages = req.flash();
+    next();
+});
 
 app.use(nocache())
 app.use(passport.initialize());

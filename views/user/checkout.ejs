@@ -142,43 +142,61 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const newAddressRadio = document.getElementById('newAddress');
-        const newAddressFields = document.getElementById('newAddressFields');
-
-        newAddressRadio.addEventListener('change', () => {
-            if (newAddressRadio.checked) {
-                newAddressFields.style.display = 'block';
-            }
-        });
-
-        document.querySelectorAll('input[name="selectedAddress"]').forEach(radio => {
-            if (radio.id !== 'newAddress') {
-                radio.addEventListener('change', () => {
-                    newAddressFields.style.display = 'none';
-                });
-            }
-        });
-
+        document.addEventListener('DOMContentLoaded', () => {
         const checkoutForm = document.getElementById('checkoutForm');
         const placeOrderBtn = document.getElementById('placeOrderBtn');
-        
-        placeOrderBtn.addEventListener('click', (e) => {
-            e.preventDefault();  
+        const addressError = document.createElement('div');
+        const paymentError = document.createElement('div');
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'You are about to place your order. Please confirm.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Place Order',
-                cancelButtonText: 'No, Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    placeOrderBtn.disabled = true;
-                    checkoutForm.submit();
+        addressError.className = 'text-danger mt-2';
+        paymentError.className = 'text-danger mt-2';
+
+        placeOrderBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            let isValid = true;
+
+            const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+            const addressSection = document.querySelector('#checkoutForm .col-md-6.mb-4:nth-of-type(1)');
+
+            if (!selectedAddress) {
+                isValid = false;
+                addressError.textContent = 'Please select an address.';
+                if (!addressSection.contains(addressError)) {
+                    addressSection.appendChild(addressError);
                 }
-            });
+            } else {
+                addressError.remove();
+            }
+
+            const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
+            const paymentSection = document.querySelector('#checkoutForm .col-md-6.mb-4:nth-of-type(2)');
+
+            if (!selectedPayment) {
+                isValid = false;
+                paymentError.textContent = 'Please select a payment method.';
+                if (!paymentSection.contains(paymentError)) {
+                    paymentSection.appendChild(paymentError);
+                }
+            } else {
+                paymentError.remove();
+            }
+
+            if (isValid) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You are about to place your order. Please confirm.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Place Order',
+                    cancelButtonText: 'No, Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        placeOrderBtn.disabled = true;
+                        checkoutForm.submit();
+                    }
+                });
+            }
         });
     });
 
@@ -257,4 +275,14 @@
         removeCouponBtn.style.display = 'none';
     });
 });
+
+const urlParams = new URLSearchParams(window.location.search);
+const error = urlParams.get('error');
+if (error) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: decodeURIComponent(error)
+    });
+}
 </script>

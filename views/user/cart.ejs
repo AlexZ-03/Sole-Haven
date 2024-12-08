@@ -3,6 +3,12 @@
 <div class="container my-5">
     <h2>Your Shopping Cart</h2>
 
+    <% if (messages.errorMessage && messages.errorMessage.length > 0) { %>
+        <div class="alert alert-danger" id="error-message">
+            <%= messages.errorMessage[0] %>
+        </div>
+    <% } %>        
+
     <!-- Cart Table -->
     <table class="table table-bordered">
         <thead>
@@ -96,4 +102,10 @@
     </div>
 </div>
 
+<script>
+    setTimeout(() => {
+        const errorMessage = document.getElementById('error-message');
+        if (errorMessage) errorMessage.style.display = 'none';
+    }, 5000);
+</script>
 <%- include("../../views/partials/user/footer") %>

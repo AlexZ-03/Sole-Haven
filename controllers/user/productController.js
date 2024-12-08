@@ -192,16 +192,22 @@ const updateCart = async (req, res) => {
 
         const sizeDetails = product.sizes.find(s => s.size === parseInt(size));
         if (!sizeDetails) {
-            return res.status(404).json({ message: 'Specified size not available for this product' });
+            req.flash('errorMessage', 'Specified size not available for this product');
+            return res.redirect('/cart');
         }
 
         const maxQuantity = 5;
         if (newQuantity > maxQuantity) {
-            return res.status(400).json({ message: `You cannot add more than ${maxQuantity} units of this product in this size to your cart` });
+            req.flash(
+                'errorMessage',
+                `You cannot add more than ${maxQuantity} units of this product in this size to your cart`
+            );
+            return res.redirect('/cart');
         }
 
         if (newQuantity > sizeDetails.quantity) {
-            return res.status(400).json({ message: 'Not enough stock available for the selected size' });
+            req.flash('errorMessage', 'Not enough stock available for the selected size');
+            return res.redirect('/cart');
         }
 
         item.quantity = newQuantity;
@@ -408,7 +414,7 @@ const postCheckoutPage = async (req, res) => {
         const { selectedAddress, paymentMethod, newName, newPhone, newPincode, newHouse, newCity, newState, newLandMark } = req.body;
 
         if (!paymentMethod) {
-            return res.status(400).send('Payment method is required.');
+            return res.status(400).json({ error: 'Payment method is required.' });
         }
 
         let addressData;
@@ -418,7 +424,6 @@ const postCheckoutPage = async (req, res) => {
                 return res.status(400).send('Incomplete address details provided.');
             }
 
-            // Create a new address object for the order
             addressData = {
                 name: newName,
                 phone: newPhone,
@@ -547,8 +552,8 @@ const postCheckoutPage = async (req, res) => {
             const wallet = await Wallet.findOne({ user: userId });
 
             if (!wallet || wallet.balance < finalAmount) {
-                return res.status(400).send('Insufficient wallet balance.');
-            }
+                return res.redirect(`/checkout?error=Insufficient+wallet+balance`);
+            }            
 
             wallet.balance -= finalAmount;
             wallet.transactions.push({
