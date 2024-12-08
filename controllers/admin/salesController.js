@@ -51,7 +51,7 @@ const applyFilter = async (req, res) => {
         if (startDate && endDate) {
             filter.createdOn = {
                 $gte: new Date(startDate),
-                $lte: new Date(endDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
             };
         } else if (presetRange) {
             switch (presetRange) {
@@ -86,6 +86,8 @@ const applyFilter = async (req, res) => {
         const overallOrderAmount = filteredSales.reduce((sum, order) => sum + order.finalAmount, 0);
         const totalDiscount = filteredSales.reduce((sum, order) => sum + (order.discount || 0), 0);
         const couponsDeduction = filteredSales.filter(order => order.couponApplied).length;
+
+        console.log('filterdSales :', filteredSales)
 
         res.render('sales', {
             startDate: filterStartDate,
