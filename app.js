@@ -55,6 +55,15 @@ app.use(express.static(path.join(__dirname,'public')));
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
 
+app.get('*', (req, res) => {
+    const userId = req.session.user || req.user;
+    if (userId) {
+      res.redirect("/")
+    } else {
+        res.redirect('/login'); 
+    }
+  });  
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on : http://localhost:${PORT}`);

@@ -152,7 +152,7 @@ const cancelOrder = async (req, res) => {
             await wallet.save();
 
             wallet.transactions.push({
-                description: `Refund for canceled order ${order.orderId}`,
+                description: `Refund for canceled order ${order.orderId.slice(-6)}`,
                 amount: order.finalAmount,
             });
             await wallet.save();
