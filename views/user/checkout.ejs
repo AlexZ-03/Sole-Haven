@@ -142,7 +142,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-        document.addEventListener('DOMContentLoaded', () => {
+       document.addEventListener('DOMContentLoaded', () => {
+        const newAddressRadio = document.getElementById('newAddress');
+        const newAddressFields = document.getElementById('newAddressFields');
         const checkoutForm = document.getElementById('checkoutForm');
         const placeOrderBtn = document.getElementById('placeOrderBtn');
         const addressError = document.createElement('div');
@@ -150,6 +152,20 @@
 
         addressError.className = 'text-danger mt-2';
         paymentError.className = 'text-danger mt-2';
+
+        newAddressRadio.addEventListener('change', () => {
+            if (newAddressRadio.checked) {
+                newAddressFields.style.display = 'block';
+            }
+        });
+
+        document.querySelectorAll('input[name="selectedAddress"]').forEach(radio => {
+            if (radio.id !== 'newAddress') {
+                radio.addEventListener('change', () => {
+                    newAddressFields.style.display = 'none';
+                });
+            }
+        });
 
         placeOrderBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -182,6 +198,7 @@
                 paymentError.remove();
             }
 
+            // Proceed with confirmation if validations pass
             if (isValid) {
                 Swal.fire({
                     title: 'Are you sure?',
