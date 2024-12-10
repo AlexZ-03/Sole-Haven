@@ -5,7 +5,9 @@ const Product = require("../../models/productSchema");
 const Orders = require('../../models/orderSchema');
 const Wallet = require('../../models/walletSchema')
 const bcrypt = require('bcrypt');
-
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 
 // const userProfile = async (req, res) => {
@@ -384,6 +386,144 @@ const getWalletPage = async (req, res) => {
     }
 };
 
+const downloadInvoice = async (req, res) => {
+    console.log('------------downloadInvoice-------------');
+    try {
+        const { orderId } = req.params;
+
+        const userId = req.session.user;
+        if (!userId) return res.redirect('/login');
+
+        const userData = await User.findById(userId).populate({
+            path: 'orderHistory',
+            populate: { path: 'orderedItems.product', model: 'Product' },
+        });
+
+        const orderDetails = await Orders.find({orderId : orderId})
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName regularPrice salePrice',
+            });
+
+        if (!userData) return res.redirect('/login');
+
+        const order = userData.orderHistory.find(o => o.orderId === orderId);
+        if (!order) return res.status(404).send('Order not found');
+
+        const invoicesDir = path.join(__dirname, '../invoices');
+        if (!fs.existsSync(invoicesDir)) fs.mkdirSync(invoicesDir, { recursive: true });
+
+        const filePath = path.join(invoicesDir, `invoice-${orderId}.pdf`);
+        const doc = new PDFDocument();
+        const stream = fs.createWriteStream(filePath);
+
+        doc.pipe(stream);
+
+        const currentDate = new Date();
+        const formattedDate = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(currentDate);
+        const formattedTime = new Intl.DateTimeFormat('en-IN', { timeStyle: 'short' }).format(currentDate);
+
+        doc.fontSize(18).text('Tax Invoice', { align: 'center', underline: true });
+        doc.fontSize(14).text('Sole Heaven IN', { align: 'center' });
+        doc.moveDown(2);
+        doc.moveTo(50, 105).lineTo(550, 105).stroke();
+
+        const leftColumnX = 50;
+        const rightColumnX = 300;
+        const startY = 120;
+
+        doc.fontSize(10).text('Sold by:', leftColumnX, startY, { underline: true });
+        doc.text('Sole Heaven No 6', leftColumnX, startY + 15);
+        doc.text('India', leftColumnX, startY + 30);
+        doc.text('Pin: 688888', leftColumnX, startY + 45);
+
+        doc.fontSize(10).text(`Order ID: ${order.orderId.slice(-12)}`, rightColumnX, startY);
+        doc.text(`Invoice No: ${Math.random().toString(36).substring(2, 10)}`, rightColumnX, startY + 15);
+        doc.text(`Order Date: ${formattedDate}, ${formattedTime}`, rightColumnX, startY + 30);
+        doc.text(`Invoice Date: ${formattedDate}, ${formattedTime}`, rightColumnX, startY + 45);
+        doc.text(`Payment Method: ${order.paymentMethod}`, rightColumnX, startY + 60);
+
+        doc.moveTo(50, startY + 80).lineTo(550, startY + 80).stroke();
+
+        const shippingAddressY = startY + 100;
+        doc.fontSize(10).text('Shipping Address:', leftColumnX, shippingAddressY, { underline: true });
+        doc.text(userData.name, leftColumnX, shippingAddressY + 15);
+        doc.text(order.address.house, leftColumnX, shippingAddressY + 30);
+        doc.text(`${order.address.state}, ${order.address.city}, ${order.address.landMark}`, leftColumnX, shippingAddressY + 45);
+        doc.text(`Pin: ${order.address.pincode}`, leftColumnX, shippingAddressY + 60);
+        doc.text(`Phone: ${order.address.phone}`, leftColumnX, shippingAddressY + 75);
+        doc.moveDown(2);
+
+        const tableTop = shippingAddressY + 110;
+        let currentRow = tableTop + 25;
+        doc.text('Product Name', 50, currentRow);
+        doc.text('Quantity', 200, currentRow);
+        doc.text('Regular Price', 250, currentRow);
+        doc.text('Sale Price', 340, currentRow);
+        doc.text('Discount', 400, currentRow);
+        doc.text('Total', 500, currentRow);
+
+        currentRow += 20;
+        doc.moveTo(50, currentRow - 2).lineTo(550, currentRow - 2).stroke();
+        doc.moveDown();
+        doc.font('Helvetica').fontSize(10);
+        order.orderedItems.forEach(item => {
+            const product = item.product || {};
+            const productName = product.productName || 'Unknown Product';
+            const regularPrice = product.regularPrice || 0;
+            const salePrice = product.salePrice || 0;
+            const quantity = item.quantity || 0;
+            const amount = salePrice * quantity; 
+            const discount = (regularPrice - salePrice) * quantity; 
+
+            doc.text(productName, 50, currentRow, { width: 150, ellipsis: true });
+            doc.text(quantity, 216, currentRow);
+            doc.text(regularPrice.toFixed(2), 250, currentRow);
+            doc.text(salePrice.toFixed(2), 340, currentRow);
+            doc.text(discount.toFixed(2), 400, currentRow);
+            doc.text(amount.toFixed(2), 500, currentRow);
+
+            currentRow += 30;
+        });
+
+        doc.moveTo(50, currentRow + 5).lineTo(550, currentRow + 5).stroke();
+
+        const totalY = currentRow + 15;
+        doc.font('Helvetica-Bold').fontSize(12);
+        doc.text('Total Amount:', 350, totalY);
+        doc.text(`₹ ${(order.finalAmount).toFixed(2)}`, 450, totalY);
+
+        doc.moveDown();
+        doc.text('All values are in INR ₹', 50, 600);
+        doc.moveDown(3);
+        doc.text('Thank you for shopping with us!',{align : "center"});
+      
+        doc.fontSize(5).text("*ASSPL-Sole-Heaven Seller Services Pvt. Ltd., ARIPL-Sole Retail India Pvt. Ltd. only where Sole Heaven Retail India Pvt. Ltd. fulfillment center is co-located Customers desirous of availing input GST credit are requested to create a Business account and purchase on SoleHeaven.in/business from Business eligible offers Please note that this invoice is not a demand for payment",{align : "center"})
+      
+        doc.end();
+
+        stream.on('finish', () => {
+            res.download(filePath, `invoice-${orderId}.pdf`, (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500).send('Error downloading invoice');
+                }
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error('Failed to delete file:', err);
+                });
+            });
+        });
+
+        stream.on('error', (err) => {
+            console.error('Stream Error:', err);
+            res.status(500).send('Failed to generate invoice');
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
 
 
 module.exports = {
@@ -397,4 +537,5 @@ module.exports = {
     returnOrder,
     getWalletPage,
     validateCurrentPassword,
+    downloadInvoice,
 }

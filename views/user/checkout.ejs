@@ -149,6 +149,8 @@
         const placeOrderBtn = document.getElementById('placeOrderBtn');
         const addressError = document.createElement('div');
         const paymentError = document.createElement('div');
+        const codRadio = document.getElementById('paymentCOD');
+        const totalElement = document.getElementById('totalAmount');
 
         addressError.className = 'text-danger mt-2';
         paymentError.className = 'text-danger mt-2';
@@ -174,7 +176,9 @@
 
             const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
             const addressSection = document.querySelector('#checkoutForm .col-md-6.mb-4:nth-of-type(1)');
+            const totalAmount = parseFloat(totalElement.textContent); // Convert total to a number
 
+            // Address Validation
             if (!selectedAddress) {
                 isValid = false;
                 addressError.textContent = 'Please select an address.';
@@ -185,12 +189,19 @@
                 addressError.remove();
             }
 
+            // Payment Validation
             const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
             const paymentSection = document.querySelector('#checkoutForm .col-md-6.mb-4:nth-of-type(2)');
 
             if (!selectedPayment) {
                 isValid = false;
                 paymentError.textContent = 'Please select a payment method.';
+                if (!paymentSection.contains(paymentError)) {
+                    paymentSection.appendChild(paymentError);
+                }
+            } else if (selectedPayment.id === 'paymentCOD' && totalAmount > 1000) {
+                isValid = false;
+                paymentError.textContent = 'COD is not allowed for orders above ₹1000.';
                 if (!paymentSection.contains(paymentError)) {
                     paymentSection.appendChild(paymentError);
                 }

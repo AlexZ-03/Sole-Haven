@@ -108,6 +108,14 @@
             font-weight: 600;
         }
 
+        .retry-payment-btn {
+            background-color: #01e109;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 <body>
@@ -161,18 +169,21 @@
                                         <% if (order.status === 'Canceled') { %>
                                             <span>Order is canceled</span>
                                         <% } else { %>
-                                            <% if (order.canCancel) { %>
+                                            <% if (order.canCancel && (order.paymentMethod !== 'Razorpay' || order.paymentStatus === 'Paid')) { %>
                                                 <button class="cancel-order-btn">Cancel Order</button>
                                             <% } %>
                                             <% if (order.canReturn && order.returnStatus == 'Not Requested') { %>
                                                 <button class="return-order-btn">Return Product</button>
-                                            <% }%>
+                                            <% } %>
+                                            <% if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'Pending') { %>
+                                                <button class="retry-payment-btn" data-order-id="<%= order.orderId %>">Retry Payment</button>
+                                            <% } %>
                                         <% } %>
-                                        <% if(order.status === 'Delivered' && !order.canReturn && !order.canCancel) {%>
-                                            <span><%= order.returnStatus%></span>
+                                        <% if(order.status === 'Delivered' && !order.canReturn && !order.canCancel) { %>
+                                            <span><%= order.returnStatus %></span>
                                         <% } %> 
                                     </div>
-                                </td>
+                                </td>                                
                             </tr>
                             <tr>
                                 <td colspan="6">
@@ -210,8 +221,13 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="6">
+                                <td colspan="5">
                                     <strong>Delivery Address:</strong> <%= order.address %>
+                                </td>
+                                <td colspan="1">
+                                    <% if(order.status !== 'Canceled') { %>
+                                        <a href="/download-invoice/<%= order.orderId %>" class="download-invoice-btn" style="text-decoration: none; padding: 8px 15px; background-color: #007bff; color: white; border-radius: 5px;">Download Invoice</a>
+                                    <% } %>
                                 </td>
                             </tr>                            
                         </tbody>
@@ -315,6 +331,27 @@
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const retryButtons = document.querySelectorAll('.retry-payment-btn');
+    retryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+
+            Swal.fire({
+                title: 'Retry Payment?',
+                text: "You are about to retry the payment for this order.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, retry!',
+                cancelButtonText: 'No, cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/retry-payment/${orderId}`;
+                }
+            });
+        });
+    });
+});
 
 </script>
 

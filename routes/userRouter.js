@@ -48,6 +48,7 @@ router.get('/orders', userAuth, profileController.getOrders);
 router.post('/cancel-order/:orderId', userAuth, profileController.cancelOrder);
 router.post('/return-order/:orderId', userAuth, profileController.returnOrder);
 router.get('/wallet', userAuth, profileController.getWalletPage);
+router.get('/download-invoice/:orderId', userAuth, profileController.downloadInvoice);
 
 router.get('/cart', userAuth, productController.getCartPage);
 router.get('/addTocart', userAuth, productController.addToCart);
@@ -61,6 +62,7 @@ router.get('/orderConformed', userAuth, productController.getOrderConformed);
 router.get('/razorpay', userAuth, productController.getRazorpay);
 router.post('/paymentSuccess', userAuth, productController.razorpaySuccess);
 router.post('/paymentFailed', userAuth, productController.razorpayFailure);
+router.get('/retry-payment/:orderId', userAuth, productController.retryRazorpay);
 router.post('/applyCoupon', userAuth, productController.applyCoupon);
 
 //Product management

@@ -853,24 +853,71 @@ const razorpaySuccess = async (req, res) => {
 
 const razorpayFailure = async (req, res) => {
     try {
+        console.log('----------razorpayFailure------------')
         const { orderId } = req.body;
         console.log('Failed Order ID:', orderId);
 
         const order = await Order.findOne({ orderId: orderId });
 
         if (order) {
-            await Order.deleteOne({ orderId: orderId });
+            order.paymentStatus = 'Pending';
+            await order.save();
         }
+
+        const userId = order.customer;
+        await Cart.updateOne({ userId }, { $set: { items: [] } });
+        await User.findByIdAndUpdate(
+            userId,
+            { $push: { orderHistory: order._id } },
+            { new: true }
+        );
 
         return res.json({ success: true });
     } catch (error) {
-        console.error('Error deleting failed order:', error);
+        console.error('Error updating failed order:', error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
 
+const retryRazorpay = async (req, res) => {
+    console.log('------------retryRazorpay--------------');
+    const { orderId } = req.params;
 
+    try {
+        const existingOrder = await Order.findOne({ orderId });
 
+        if (!existingOrder) {
+            return res.status(404).send('Order not found.');
+        }
+
+        if (existingOrder.paymentMethod !== 'Razorpay') {
+            return res.status(400).send('Payment method is not Razorpay.');
+        }
+
+        try {
+            const razorpayOrder = await razorpay.orders.create({
+                amount: existingOrder.finalAmount * 100,
+                currency: 'INR',
+                receipt: `order_rcptid_${Date.now()}`,
+                notes: { userId: existingOrder.customer, addressData: existingOrder.address }
+            });
+
+            existingOrder.razorpayOrderId = razorpayOrder.id;
+            existingOrder.status = 'Pending';
+            await existingOrder.save();
+
+            const userData = await User.findById(existingOrder.customer);
+
+            return res.redirect(`/razorpay?orderId=${existingOrder.orderId}&razorpayOrderId=${razorpayOrder.id}&razorpayKey=${process.env.RAZORPAY_ID}&finalAmount=${existingOrder.finalAmount}&userName=${userData.name}&userEmail=${userData.email}&userPhone=${userData.phone}`);
+        } catch (err) {
+            console.error('Razorpay Order Creation Error:', err);
+            return res.status(500).send('Failed to create Razorpay order. Please try again.');
+        }
+    } catch (error) {
+        console.error('RetryRazorpay Error:', error);
+        res.status(500).send('Server error occurred.');
+    }
+};
 
 const getOrderConformed = (req, res) => {
     const { message, orderId } = req.query;
@@ -984,4 +1031,5 @@ module.exports = {
     addToWishlist,
     removeWishlist,
     applyCoupon,
+    retryRazorpay,
 }
