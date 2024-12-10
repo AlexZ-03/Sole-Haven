@@ -1,0 +1,119 @@
+<%- include("../../views/partials/admin/header") %>
+<main class="right mt-5">
+    <header class="main-header navbar">
+        <h2 class="page-title">Order Details</h2>
+    </header>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Order Details</h4>
+            </div>
+            <div class="right mt-5">
+                <div class="table-responsive mx-auto">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>Order ID</th>
+                                <td><%= order.orderId %></td>
+                            </tr>
+                            <tr>
+                                <th>Customer Name</th>
+                                <td><%= order.customer ? order.customer.name : 'Customer not available' %></td>
+                            </tr>
+                            <tr>
+                                <th>Contact Information</th>
+                                <td>
+                                    Email: <%= order.customer ? order.customer.email : 'Email not available' %> <br>
+                                    Phone: <%= order.address.phone %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Delivery Address</th>
+                                <td>
+                                    <%= order.address.name %>, 
+                                    <%= order.address.house %>, 
+                                    <%= order.address.landMark %>, 
+                                    <%= order.address.city %>, 
+                                    <%= order.address.state %>, 
+                                    <%= order.address.pincode %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Order Date</th>
+                                <td><%= new Date(order.createdOn).toLocaleString() %></td>
+                            </tr>
+                            <tr>
+                                <th>Invoice Date</th>
+                                <td><%= order.invoiceDate ? new Date(order.invoiceDate).toLocaleString() : 'Not available' %></td>
+                            </tr>
+                            <tr>
+                                <th>Products</th>
+                                <td>
+                                    <% order.orderedItems.forEach(item => { %>
+                                        <div class="product-item">
+                                            <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="img-thumbnail" style="width: 100px; height: 100px;">
+                                            <div>
+                                                <strong>Product:</strong> <%= item.product ? item.product.productName : 'Product not available' %> <br>
+                                                <strong>Size:</strong> <%= item.size || 'N/A' %> <br>
+                                                <strong>Quantity:</strong> <%= item.quantity %> <br>
+                                                <strong>Price:</strong> $<%= item.price %>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                    <% }); %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Coupon Applied</th>
+                                <td><%= order.couponApplied ? 'Yes' : 'No' %></td>
+                            </tr>
+                            <tr>
+                                <th>Total Price</th>
+                                <td>₹<%= order.totalPrice %></td>
+                            </tr>
+                            <tr>
+                                <th>Discount</th>
+                                <td>₹<%= order.discount %></td>
+                            </tr>
+                            <tr>
+                                <th>Final Amount</th>
+                                <td>₹<%= order.finalAmount %></td>
+                            </tr>
+                            <tr>
+                                <th>Payment Method</th>
+                                <td><%= order.paymentMethod %></td>
+                            </tr>
+                            <tr>
+                                <th>Payment Status</th>
+                                <td>
+                                    <span class="badge <%= order.paymentStatus === 'Paid' ? 'bg-success' : 'bg-warning' %>">
+                                        <%= order.paymentStatus %>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Order Status</th>
+                                <td>
+                                    <span class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-danger' %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Return Status</th>
+                                <td>
+                                    <span class="badge <%= order.returnStatus === 'Not Requested' ? 'bg-secondary' : order.returnStatus === 'Requested' ? 'bg-warning' : order.returnStatus === 'Approved' ? 'bg-success' : 'bg-danger' %>">
+                                        <%= order.returnStatus %>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>            
+        </div>
+    </div>
+</main>
+
+<%- include("../../views/partials/admin/footer") %>

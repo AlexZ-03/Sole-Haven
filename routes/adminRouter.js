@@ -69,6 +69,7 @@ router.post('/orders/update/:id', adminAuth, orderController.editOrder);
 router.get('/returnOrders', adminAuth, orderController.getReturnOrderPage);
 router.post('/returnOrders/:id/update', adminAuth, orderController.updateReturnStatus);
 router.get('/returnOrders/:id/update', adminAuth, orderController.renderUpdateReturnStatusPage);
+router.get('/orders/:orderId/details', orderController.getOrderDetailsPage);
 
 //Coupon management
 router.get('/coupon', adminAuth, couponController.getCouponPage);

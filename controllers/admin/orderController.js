@@ -11,6 +11,35 @@ const nodemailer = require('nodemailer');
 
 
 
+const getOrderDetailsPage = async (req, res) => {
+    try {
+        // Retrieve the orderId from the request parameters
+        const { orderId } = req.params;
+
+        // Fetch the specific order by orderId
+        const order = await Order.findOne({ orderId })
+            .populate({
+                path: 'customer',
+                select: 'name email'
+            })
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName productImage'
+            })
+            .exec();
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        // Render the orderDetailsPage with the fetched order details
+        res.render('orderDetailsPage', { order });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        res.status(500).send('Error fetching order details');
+    }
+};
+
 const getOrderPage = async (req, res) => {
     try {
         const orders = await Order.find()
@@ -304,4 +333,5 @@ module.exports = {
     getReturnOrderPage,
     updateReturnStatus,
     renderUpdateReturnStatusPage,
+    getOrderDetailsPage,
 }

@@ -20,9 +20,9 @@
                                 <th>Customer Name</th>
                                 <th>Product(s)</th>
                                 <th>Total Amount</th>
-                                <th>Delivery Address</th>
                                 <th>Status</th>
                                 <th>Actions</th>
+                                <th>More Info</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -40,15 +40,6 @@
                                         <%= order.finalAmount %>
                                     </td>
                                     <td>
-                                        <% if (order.address) { %>
-                                            <%= order.address.landMark %>, 
-                                            <%= order.address.city %>, 
-                                            <%= order.address.pincode %>
-                                        <% } else { %>
-                                            Address not available
-                                        <% } %>
-                                    </td>
-                                    <td>
                                         <span class="badge <%= order.status === 'Delivered' ? 'bg-success' : order.status === 'Pending' ? 'bg-warning' : 'bg-danger' %>">
                                             <%= order.status %>
                                         </span>
@@ -62,6 +53,9 @@
                                         <% } else {%>
                                             <span class="text-danger">No actions available for order</span>
                                         <% } %>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/orders/<%= order.orderId %>/details" class="btn btn-primary" style="padding: 2px 5px; font-size: 12px;">More Details</a>
                                     </td>                                                                       
                                 </tr>
                             <% }); %>
