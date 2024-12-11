@@ -44,6 +44,8 @@ router.post('/validateCurrentPassword', userAuth, profileController.validateCurr
 router.get('/manageAddress', userAuth, profileController.getAddressPage);
 router.post('/addAddress', userAuth, profileController.addAddress);
 router.delete('/deleteAddress/:id', userAuth, profileController.deleteAddress);
+router.get('/editAddress/:id', userAuth, profileController.getEditAddressPage);
+router.post('/editAddress/:id', userAuth, profileController.editAddress);
 router.get('/orders', userAuth, profileController.getOrders);
 router.post('/cancel-order/:orderId', userAuth, profileController.cancelOrder);
 router.post('/return-order/:orderId', userAuth, profileController.returnOrder);

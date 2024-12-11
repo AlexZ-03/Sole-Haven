@@ -373,6 +373,74 @@ const deleteAddress = async (req, res) => {
     }
 }
 
+const getEditAddressPage = async (req, res) => {
+    try {
+        const addressId = req.params.id;
+        const userId = req.session.user;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).send('User not found');
+
+        const userAddressDoc = await Address.findOne({ userId: user._id });
+        if (!userAddressDoc) return res.status(404).send('Address not found');
+
+        const address = userAddressDoc.address.find(
+            (addr) => addr._id.toString() === addressId && !addr.isDeleted
+        );
+
+        if (!address) return res.status(404).send('Address not found');
+
+        res.render('editAddress', { 
+            user, 
+            address 
+        });
+    } catch (err) {
+        console.error("Error fetching edit address page:", err);
+        res.status(500).send('Server Error');
+    }
+};
+
+const editAddress = async (req, res) => {
+    try {
+        const addressId = req.params.id;
+        const userId = req.session.user;
+
+        const { addressType, name, city, landMark, state, pincode, house, phone } = req.body;
+
+        if (!addressType || !name || !city || !landMark || !state || !pincode || !house || !phone) {
+            return res.status(400).send({ message: "All fields are required!" });
+        }
+
+        const userAddressDoc = await Address.findOne({ userId: userId });
+        if (!userAddressDoc) return res.status(404).send('Address not found');
+
+        const addressIndex = userAddressDoc.address.findIndex(
+            (addr) => addr._id.toString() === addressId && !addr.isDeleted
+        );
+
+        if (addressIndex === -1) return res.status(404).send('Address not found');
+
+        userAddressDoc.address[addressIndex] = {
+            ...userAddressDoc.address[addressIndex],
+            addressType,
+            name,
+            city,
+            landMark,
+            state,
+            pincode,
+            house,
+            phone,
+        };
+
+        await userAddressDoc.save();
+
+        res.status(200).send({ message: "Address updated successfully!" });
+    } catch (err) {
+        console.error("Error updating address:", err);
+        res.status(500).send('Server Error');
+    }
+};
+
 const getWalletPage = async (req, res) => {
     try {
         console.log('--------getWalletPage-----------');
@@ -536,6 +604,8 @@ module.exports = {
     getAddressPage,
     addAddress,
     deleteAddress,
+    getEditAddressPage,
+    editAddress,
     cancelOrder,
     returnOrder,
     getWalletPage,

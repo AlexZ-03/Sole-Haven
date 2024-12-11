@@ -1,0 +1,165 @@
+<html>
+<head>
+    <title>Manage Address</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/profile.css">
+</head>
+<body>
+
+    <style>
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .address-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .address-item {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .address-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .address-actions button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .address-actions button.delete {
+            background-color: #dc3545;
+        }
+
+        .address-actions button.edit {
+            background-color: #28a745;
+        }
+
+        .form-container {
+            margin-top: 30px;
+        }
+
+    </style>
+
+    <% if (user) { %>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <img alt="Profile Picture" height="100" src="https://e7.pngegg.com/pngimages/136/22/png-clipart-user-profile-computer-icons-girl-customer-avatar-angle-heroes-thumbnail.png" width="100" />
+                <span>Hello</span>
+                <h4 class="p-1 text-black"><%= user.name %></h4>
+            </div>
+            <ul class="menu">
+                <li><a class="active" href="/userProfile"><i class="fas fa-user"></i> Account Overview</a></li>
+                <li><a href="/orders"><i class="fas fa-box"></i> My Orders</a></li>
+                <li><a class="active" href="/manageAddress" class="menu-link" data-content="manageAddress"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+                <li><a href="/wallet" class="menu-link" data-content="wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
+            </ul>
+            <div class="logout text-white">
+                <button><a href="/logout" class="border-rounded text-white">LOGOUT</a></button>
+            </div>
+        </div>
+
+        <div class="content" id="content-container">
+            <!-- Content will be dynamically loaded here -->
+            <div class="form-container">
+                <div class="container">
+                    <h2>Edit Address</h2>
+                    <form id="editAddressForm">
+                        <input type="hidden" name="addressId" value="<%= address._id %>">
+                        <div class="form-group">
+                            <label for="addressType">Address Type</label>
+                            <input id="addressType" type="text" name="addressType" value="<%= address.addressType %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input id="name" type="text" name="name" value="<%= address.name %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="house">House</label>
+                            <input id="house" type="text" name="house" value="<%= address.house %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input id="city" type="text" name="city" value="<%= address.city %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State</label>
+                            <input id="state" type="text" name="state" value="<%= address.state %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pincode">Pincode</label>
+                            <input id="pincode" type="text" name="pincode" value="<%= address.pincode %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="landMark">Landmark</label>
+                            <input id="landMark" type="text" name="landMark" value="<%= address.landMark %>">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input id="phone" type="text" name="phone" value="<%= address.phone %>" required>
+                        </div>
+                        <button type="submit">Update Address</button>
+                    </form>
+                </div>                
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('editAddressForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/editAddress/<%= address._id %>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Address updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => {
+                        window.location.href = '/manageAddress';
+                    });
+                } else {
+                    const result = await response.json();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Failed to update address!',
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating address:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred!',
+                });
+            }
+        });
+    </script>
+</body>
+</html>
