@@ -280,7 +280,8 @@ const editProfile = async (req, res) => {
 
 const getAddressPage = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const userId = req.session.user;
+        const user = await User.findById(userId);
         if (!user) return res.status(404).send('User not found');
 
         const userAddressDoc = await Address.findOne({
@@ -374,7 +375,9 @@ const deleteAddress = async (req, res) => {
 
 const getWalletPage = async (req, res) => {
     try {
-        const userId = req.user._id;
+        console.log('--------getWalletPage-----------');
+        console.log(req.session.user);
+        const userId = req.session.user;
         
         const user = await User.findById(userId).populate('wallet');
         console.log(user.wallet)

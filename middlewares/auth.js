@@ -21,7 +21,7 @@ const User = require('../models/userSchema');
 
 const userAuth = async (req, res, next) => {
     try {
-        const userId = req.session.user || req.user;
+        const userId = req.session?.user?._id || req.user?._id;
 
         if (userId) {
             const user = await User.findById(userId);

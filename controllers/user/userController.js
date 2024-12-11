@@ -206,42 +206,41 @@ const loginPage = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const {email, password} = req.body;
+        console.log('------------postLogin------------')
+        const { email, password } = req.body;
 
-        const findUser = await User.findOne({email: email});
+        const findUser = await User.findOne({ email });
 
-        if(!findUser){
-            return res.render('login', {message: "Email Or Password is Incorrect"});
+        if (!findUser) {
+            return res.render('login', { message: "Email or Password is incorrect" });
         }
-        if(findUser.isBlocked){
-            return res.render('login', {message: "User is blocked by admin"});
+
+        if (findUser.isBlocked) {
+            return res.render('login', { message: "User is blocked by admin" });
         }
-        sessionActive = true;
 
         const passwordMatch = await bcrypt.compare(password, findUser.password);
-
-        if(!passwordMatch) {
-            return res.render('login', {message: "Email Or Password Is Incorrect "});
+        if (!passwordMatch) {
+            return res.render('login', { message: "Email or Password is incorrect" });
         }
 
         req.user = findUser;
+        req.user._id = findUser._id;
+        req.session.user = {
+            _id: findUser._id,
+            name: findUser.name,
+            email: findUser.email,
+        };
+        console.log(req.user, req.session.user)
 
-        if (req.user && req.user._id && req.user.name && req.user.email) {
-            req.session.user = {
-                _id: req.user._id,
-                name: req.user.name,
-                email: req.user.email,
-            };
-        } else {
-            return res.status(500).send('User data is incomplete');
-        }
-        sessionActive = true;
         res.redirect('/');
     } catch (error) {
-        console.error('Login error occured', error);
-        res.render('login', {message: "login Failed"});
+        console.error('Login error occurred:', error);
+
+        res.render('login', { message: "Login failed. Please try again later." });
     }
-}
+};
+
 
 
 const logout = async (req, res) => {
