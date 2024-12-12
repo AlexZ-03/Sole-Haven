@@ -57,7 +57,7 @@
                             <img src="/uploads/product-images/<%= product.image || '/images/placeholder.png' %>" class="card-img-top" alt="<%= product.name %>">
                             <div class="card-body">
                                 <h5 class="card-title"><%= product.name %></h5>
-                                <p class="card-text">$<%= product.price %></p>
+                                <p class="card-text">₹<%= product.price %></p>
                                 <a href="/productDetails?id=<%= product.id %>" class="btn btn-primary">View</a>
                                 <button class="btn btn-danger" onclick="removeFromWishlist('<%= product.id %>')">Remove</button>
                             </div>

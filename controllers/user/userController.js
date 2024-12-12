@@ -5,6 +5,7 @@ const Banner = require('../../models/bannerSchema');
 const nodemailer = require('nodemailer');
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
+const Wallet = require('../../models/walletSchema');
 
 const pageNotFound = async (req, res) => {
     try {
@@ -156,6 +157,19 @@ const verifyOtp = async (req, res) => {
             });
 
             await saveUserData.save();
+            const userWallet = new Wallet({
+                user: saveUserData._id,
+                balance: 0,
+                transactions: []
+            });
+    
+            await userWallet.save();
+
+            saveUserData.wallet = userWallet._id;
+            await saveUserData.save();
+
+            console.log('User and Wallet created:', { user: saveUserData, wallet: userWallet });
+    
             req.session.user = saveUserData._id;
             sessionActive = true;
             return res.json({ success: true, redirectUrl: "/" });
