@@ -173,6 +173,11 @@ const verifyOtp = async (req, res) => {
             console.log('User and Wallet created:', { user: saveUserData, wallet: userWallet });
     
             req.session.user = saveUserData._id;
+            req.session.user = {
+                _id: saveUserData._id,
+                name: saveUserData.name,
+                email: saveUserData.email,
+            };
             sessionActive = true;
             return res.json({ success: true, redirectUrl: "/" });
         } else {
