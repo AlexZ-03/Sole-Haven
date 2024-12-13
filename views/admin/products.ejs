@@ -58,6 +58,7 @@
                 <th scope="col"><b>Offer</b></th>
                 <th scope="col"><b>Quantities</b></th>
                 <th scope="col"><b>Action</b></th>
+                <th scope="col"><b>Delete</b></th>
                 <th scope="col"><b>Edit</b></th>
             </tr>
         </thead>
@@ -125,6 +126,11 @@
                         <a href="/admin/unblockProduct?id=<%=data[i]._id%>" class="text-white" style="text-decoration: none;">Unblock</a>
                     </button>
                     <% } %>
+                </td>
+                <td>
+                    <button class="btn btn-danger" style="width: 80px;">
+                        <a href="/admin/deleteProduct?id=<%=data[i]._id%>" class="text-white" style="text-decoration: none;">Delete</a>
+                    </button>
                 </td>
                 <td>
                     <button class="btn btn-info" style="width: 80px;">

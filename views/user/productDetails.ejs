@@ -206,19 +206,27 @@
                                                 <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
                                             </div>
                                             <div class="product-extra-link2">
-                                                <button type="submit" class="button button-add-to-cart" onclick="addToCart('<%=product._id%>', 1)">Add to Cart</button>
-                                                <a aria-label="Add To Wishlist" 
-                                                class="action-btn hover-up" 
-                                                id="wishlist-btn" 
-                                                onclick="addToWishlist('<%=product._id%>')">
-                                                    <i class="fi-rs-heart"></i>
-                                                </a>
+                                                <% if(isOutOfStock) {%>
+                                                        <button class="btn btn-danger" disabled>Add To Cart Not Available (Out of Stock)</button>
+                                                    <% } else { %>
+                                                        <button type="submit" class="button button-add-to-cart" onclick="addToCart('<%=product._id%>', 1)">Add to Cart</button>
+                                                        <a aria-label="Add To Wishlist" 
+                                                        class="action-btn hover-up" 
+                                                        id="wishlist-btn" 
+                                                        onclick="addToWishlist('<%=product._id%>')">
+                                                            <i class="fi-rs-heart"></i>
+                                                        </a>
+                                                    <% } %>
                                             </div>
                                         </div>
                                         <ul class="product-meta font-xs color-grey mt-50">
                                             <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
                                             <li class="mb-5">Tags:<a href="#" rel="tag"><%=product.brand%></a>, <a href="#" rel="tag"><%=product.category.name %></a> </li>
+                                            <% if(isOutOfStock) { %>
+                                                <li>Availability<span class="in-stock text-danger ml-5"><%=product.quantity %> Items Not In Stock</span></li>
+                                            <% } else {%>
                                             <li>Availability:<span class="in-stock text-success ml-5"><%=product.quantity %> Items In Stock</span></li>
+                                            <% } %>
                                         </ul>
                                     </div>
                                     <!-- Detail Info -->

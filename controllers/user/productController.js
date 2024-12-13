@@ -112,9 +112,11 @@ const getCartPage = async (req, res) => {
         const itemsWithStockStatus = items.map(item => {
             const product = item.productId;
 
+            const isBlockedOrDeleted = product.isBlocked || product.isDeleted;
+
             const selectedSize = product.sizes.find(sizeObj => sizeObj.size == item.size);
 
-            const isOutOfStock = !selectedSize || selectedSize.quantity < item.quantity;
+            const isOutOfStock = isBlockedOrDeleted || !selectedSize || selectedSize.quantity < item.quantity;
 
             return {
                 ...item.toObject(),
@@ -255,7 +257,11 @@ const getShopPage = async (req, res) => {
         const currentPage = Math.max(parseInt(page, 10) || 1, 1); 
         const skip = (currentPage - 1) * limit;
 
-        let filter = {};
+        let filter = {
+            isBlocked: false,
+            isDeleted: false,
+        };
+
         let sortCriteria = {};
 
         if (search) {

@@ -28,6 +28,7 @@ const loadHomePage = async (req, res) => {
 
         const categories = await Category.find({ isListed: true });
         let productData = await Product.find({
+            isDeleted: false,
             isBlocked: false,
             category: { $in: categories.map(category => category._id) },
         });
@@ -436,6 +437,8 @@ const getProductPage = async (req, res) => {
                 path: 'reviews',
                 populate: { path: 'userId', select: 'name' }
             });
+
+        const isOutOfStock = product.isBlocked == true || product.isDeleted == true;
             
         const relatedProducts = await Product.find({ 
             category: product.category._id, 
@@ -445,7 +448,7 @@ const getProductPage = async (req, res) => {
         if (!product) {
           return res.status(404).send('Product not found');
         }
-        res.render('productDetails', { product , relatedProducts});
+        res.render('productDetails', { product , relatedProducts, isOutOfStock});
       } catch (error) {
         console.error('Error fetching product details:', error);
         res.status(500).send('Server Error');

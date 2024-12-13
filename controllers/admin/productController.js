@@ -85,14 +85,21 @@ const getProducts = async (req, res) => {
         const limit = 5;
         
         const productData = await Product.find({
-            $or: [
-                {productName: {$regex: new RegExp(".*"+search+".*","i")}},
-                {brand: {$regex: new RegExp(".*"+search+".*","i")}},
+            $and: [
+                { isDeleted: false },
+                {
+                    $or: [
+                        { productName: { $regex: new RegExp(".*" + search + ".*", "i") } },
+                        { brand: { $regex: new RegExp(".*" + search + ".*", "i") } },
+                    ],
+                },
             ],
-        }).limit(limit*1)
-        .skip((page-1)*limit)
+        })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
         .populate('category')
         .exec();
+
 
         const count = await Product.find({
             $or: [
@@ -104,7 +111,7 @@ const getProducts = async (req, res) => {
         const category = await Category.find({isListed: true});
         const brand = await Brand.find({isBlocked: false});
 
-        console.log(productData)
+        // console.log(productData)
         
         if(category && brand){
             res.render("products",{
@@ -276,6 +283,17 @@ const deleteSingleImage = async (req, res) => {
     }
 }
 
+const deleteProduct = async (req, res) => {
+    try {
+        console.log('----------deleteProduct------------')
+        let id = req.query.id;
+        await Product.updateOne({_id: id}, {$set: {isDeleted: true}});
+        res.redirect('/admin/products');
+    } catch (error) {
+        res.redirect("/admin/pageError");
+    }
+}
+
 
 
 
@@ -294,4 +312,5 @@ module.exports = {
     getEditProduct,
     editProduct,
     deleteSingleImage,
+    deleteProduct,
 }

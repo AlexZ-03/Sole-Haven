@@ -54,6 +54,7 @@ router.get('/unblockProduct', adminAuth, producController.unblockProduct);
 router.get('/editProduct', adminAuth, producController.getEditProduct);
 router.post('/editProduct/:id', adminAuth, uploads.array("images",4), producController.editProduct);
 router.post('/deleteImage', adminAuth, producController.deleteSingleImage);
+router.get('/deleteProduct', adminAuth, producController.deleteProduct);
 
 //Banner management
 router.get('/banner', adminAuth, bannerController.getBannerPage);
