@@ -139,7 +139,7 @@ const addProductOffer = async (req, res) => {
         if(findCategory.categoryOffer > percentage) {
             return res.json({status: false, message: "This product category already has a category offer"});
         }
-        findProduct.salePrice = findProduct.salePrice-Math.floor(findProduct.regularPrice*(percentage/100));
+        findProduct.salePrice = findProduct.regularPrice-Math.floor(findProduct.regularPrice*(percentage/100));
         findProduct.productOffer = parseInt(percentage);
         await findProduct.save();
         findCategory.categoryOffer = 0;
