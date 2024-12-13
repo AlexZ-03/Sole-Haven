@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt');
 const Wallet = require('../../models/walletSchema');
+const req = require('express/lib/request');
 
 const pageNotFound = async (req, res) => {
     try {
@@ -465,6 +466,63 @@ const loadLogin = async(req,res)=>{
     }
 }
 
+const loadAboutUs = async (req, res) => {
+    try {
+        console.log('----------------loadAboutUs------------');
+        res.render('aboutUs');
+    } catch (error) {
+        console.log('Error in loadAboutUs :', error)
+        res.redirect('/pageNotFound');
+    }
+}
+
+const loadContactUs = async (req, res) => {
+    try {
+        console.log('-------------loadContactUs------------');
+        res.render('contactUs');
+    } catch (error) {
+        console.log('Error in loadContactUs :', error);
+        res.redirect('/pageNotFound');
+    }
+}
+
+const sendMail = async (req, res) => {
+    try {
+        console.log('--------------sendMail--------------');
+        const { email, message } = req.body;
+
+        if (!email || !message) {
+            return res.status(400).send('Email and message are required.');
+        }
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.NODEMAILER_EMAIL,
+                pass: process.env.NODEMAILER_PASSWORD,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.NODEMAILER_EMAIL,
+            to: process.env.EMAIL_SUPPORT,
+            subject: 'New Contact Us Form Submission',
+            text: `Message from ${email}:\n\n${message}`,
+            replyTo: email,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return res.status(500).json({ success: false });
+            }
+            res.json({ success: true });
+        });
+
+    } catch (error) {
+        console.error('Error in sendMail:', error);
+        res.status(500).send('Failed to send message. Please try again later.');
+    }
+};
 
 
 
@@ -485,5 +543,8 @@ module.exports = {
     getResetPassword,
     resetPassword,
     loadLogin,
+    loadAboutUs,
+    loadContactUs,
+    sendMail,
     
 }

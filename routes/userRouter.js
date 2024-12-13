@@ -36,6 +36,9 @@ router.post('/resetPassword', userController.resetPassword);
 router.get('/',userController.loadHomePage);
 router.get('/logout', userController.logout);
 router.get("/login",userController.loadLogin);
+router.get('/about', userController.loadAboutUs);
+router.get('/contact', userController.loadContactUs);
+router.post('/contact', userController.sendMail);
 
 //Profile routes
 router.get('/userProfile', userAuth, profileController.userProfile)

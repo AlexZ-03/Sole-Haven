@@ -1,0 +1,132 @@
+<%- include("../../views/partials/user/header") %>
+
+<main>
+    <section class="contact-us">
+        <h1>Contact Us</h1>
+        <p>We would love to hear from you! Please fill out the form below to get in touch with us.</p>
+
+        <form action="/contact" method="POST" class="contact-form" id="contact-form">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" placeholder="Write your message here" rows="5" required></textarea>
+            </div>
+
+            <button type="submit" class="btn">Send</button>
+        </form>
+    </section>
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        fetch('/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Message Sent!',
+                    text: 'Your message has been sent successfully.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    document.getElementById('contact-form').reset();
+                    window.location.reload(); 
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong, please try again later.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'There was an error sending the message.',
+                confirmButtonText: 'OK'
+            });
+        });
+    });
+</script>
+
+
+<style>
+    .contact-us {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+    }
+
+    .contact-us h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .contact-us p {
+        margin-bottom: 20px;
+        font-size: 1rem;
+        color: #555;
+    }
+
+    .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        text-align: left;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input, textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button.btn {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button.btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<%- include("../../views/partials/user/footer") %>
