@@ -942,7 +942,7 @@ const getOrderConformed = (req, res) => {
 
 const getWishlist = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.session.user;
 
         const wishlist = await Wishlist.findOne({ userId })
             .populate({
