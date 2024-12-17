@@ -32,6 +32,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+            border: rgb(189, 184, 184) solid 2px;
         }
 
         .order-table th, .order-table td {
@@ -224,11 +225,13 @@
                                 <td colspan="5">
                                     <strong>Delivery Address:</strong> <%= order.address %>
                                 </td>
+                                <% if(order.paymentStatus === 'Paid') {%>
                                 <td colspan="1">
                                     <% if(order.status !== 'Canceled') { %>
                                         <a href="/download-invoice/<%= order.orderId %>" class="download-invoice-btn" style="text-decoration: none; padding: 8px 15px; background-color: #007bff; color: white; border-radius: 5px;">Download Invoice</a>
                                     <% } %>
                                 </td>
+                                <% } %>
                             </tr>                            
                         </tbody>
                     </table>

@@ -211,7 +211,7 @@ const generatePDF = async (res, orders, dateFilter, startDate, endDate) => {
         doc.text('Order ID', 60, 200, { continued: false, width: 60 });
         doc.text('Date', 140, 200, { continued: false, width: 60 });
         doc.text('Product', 220, 200, { continued: false, width: 60 });
-        doc.text('SKU', 290, 200, { continued: false, width: 60 });
+        doc.text('Name', 290, 200, { continued: false, width: 60 });
         doc.text('Color', 380, 200, { continued: false, width: 60 });
         doc.text('Regular Price', 430, 200, { continued: false, width: 60 });
         doc.text('Saled Price', 500, 200, { continued: false, width: 60 });
@@ -272,7 +272,7 @@ const generatePDF = async (res, orders, dateFilter, startDate, endDate) => {
                 .text(order.orderId?.toString().slice(-6) || 'N/A', 60, fixedY, { continued: false, width: 60 })
                 .text(order.createdOn ? order.createdOn.toLocaleString() : 'N/A', 140, fixedY, { continued: false, width: 60 })
                 .text(item.product.productName || 'N/A', 220, fixedY, { continued: false, width: 60 })
-                .text(item.product._id.toString().slice(-6) || 'N/A', 290, fixedY, { continued: false, width: 60 })
+                .text(order.address.name.toString() || 'N/A', 290, fixedY, { continued: false, width: 60 })
                 .text(item.product.color || 'N/A', 380, fixedY, { continued: false, width: 60 })
                 .text(regularPrice.toFixed(2), 430, fixedY, { continued: false, width: 60 })
                 .text(saledPrice.toFixed(2), 500, fixedY, { continued: false, width: 60 })
@@ -302,16 +302,27 @@ const generatePDF = async (res, orders, dateFilter, startDate, endDate) => {
             fixedY += 50;
 
             if (orderIndex === ordersWithProducts.length - 1 && itemIndex === order.orderedItems.length - 1) {
-                doc.fontSize(8).text("Returned Total:", 320, fixedY, { continued: false, width: 60 });
-                doc.text(grandTotalReturnedAmount.toFixed(2), 750, fixedY, { continued: false, width: 60 });
-                doc.moveDown();
+                doc.fontSize(12).fillColor('black').text("Summary Totals:", 600, fixedY, { bold: true });
+                fixedY += 20;
 
-                doc.fontSize(12).text('Net Total:', 320, fixedY += 50, { continued: false });
-                doc.text(grandTotalRegularPrice.toFixed(2), 430, fixedY, { continued: false, width: 60 });
-                doc.text(grandTotalSaledPrice.toFixed(2), 500, fixedY, { continued: false, width: 60 });
-                doc.text(grandTotalQuantity.toString(), 570, fixedY, { continued: false, width: 60 });
-                doc.text(grandTotalDiscount.toFixed(2), 690, fixedY, { continued: false, width: 60 });
-                doc.text((grandTotalNetPrice - grandTotalReturnedAmount).toFixed(2), 750, fixedY, { width: 60 });
+                doc.fontSize(10).text("Returned Total:", 600, fixedY, { continued: false, width: 100 });
+                doc.text(grandTotalReturnedAmount.toFixed(2), 750, fixedY, { width: 60 });
+                
+                doc.fontSize(10).text("Total Regular Price:", 600, fixedY += 15, { continued: false, width: 120 });
+                doc.text(grandTotalRegularPrice.toFixed(2), 750, fixedY, { width: 60 });
+
+                doc.fontSize(10).text("Total Saled Price:", 600, fixedY += 15, { continued: false, width: 120 });
+                doc.text(grandTotalSaledPrice.toFixed(2), 750, fixedY, { width: 60 });
+
+                doc.fontSize(10).text("Total Quantity:", 600, fixedY += 15, { continued: false, width: 120 });
+                doc.text(grandTotalQuantity.toFixed(2), 750, fixedY, { width: 60 });
+
+                doc.fontSize(10).text("Total Discount:", 600, fixedY += 15, { continued: false, width: 120 });
+                doc.text(grandTotalDiscount.toFixed(2), 750, fixedY, { width: 60 });
+
+                doc.fontSize(12).text('Net Total:', 600, fixedY += 30, { bold: true });
+                doc.text((grandTotalNetPrice - grandTotalReturnedAmount).toFixed(2), 750, fixedY, {bold: true, width: 60 });
+
             }
         });
     });

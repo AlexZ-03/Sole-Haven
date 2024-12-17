@@ -561,8 +561,23 @@ const downloadInvoice = async (req, res) => {
 
         const totalY = currentRow + 15;
         doc.font('Helvetica-Bold').fontSize(12);
-        doc.text('Total Amount:', 350, totalY);
-        doc.text(`₹ ${(order.finalAmount).toFixed(2)}`, 450, totalY);
+
+        if (order.couponApplied) {
+            const discountAmount = order.totalPrice - order.finalAmount;
+            doc.text('Coupon Applied:', 350, totalY);
+            doc.text(`-  ${(discountAmount).toFixed(2)}`, 450, totalY);
+            doc.moveDown();
+            doc.text('Total Amount:', 350, totalY + 20);
+            doc.text(` ${(order.finalAmount).toFixed(2)}`, 450, totalY + 20);
+        } else {
+            doc.text('Total Amount:', 350, totalY);
+            doc.text(` ${(order.finalAmount).toFixed(2)}`, 450, totalY);
+        }
+
+        // const totalY = currentRow + 15;
+        // doc.font('Helvetica-Bold').fontSize(12);
+        // doc.text('Total Amount:', 350, totalY);
+        // doc.text(`₹ ${(order.finalAmount).toFixed(2)}`, 450, totalY);
 
         doc.moveDown();
         doc.text('All values are in INR ₹', 50, 600);

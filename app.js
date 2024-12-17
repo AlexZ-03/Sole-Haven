@@ -57,11 +57,11 @@ app.use('/admin', adminRouter);
 app.get('*', (req, res) => {
     const userId = req.session.user || req.user;
     if (userId) {
-      res.redirect("/")
+      res.redirect("/pageNotFound")
     } else {
         res.redirect('/login'); 
     }
-  });  
+  });
 
 const PORT = process.env.PORT || 5000;
 // app.listen(PORT, () => {
