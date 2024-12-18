@@ -13,7 +13,7 @@ const pageNotFound = async (req, res) => {
         res.render("page-404")
     } catch (error) {
         res.redirect('/pageNotFound');
-       console.log('Page not found');
+        console.log('Page not found');
     }
 }
 
@@ -138,7 +138,7 @@ const securePassword = async (password) => {
         const hashPassword = await bcrypt.hash(password,10);
         return hashPassword;
      } catch (error) {
-        
+        console.log('Error while hashing the password :', error)
      }
 }
 
