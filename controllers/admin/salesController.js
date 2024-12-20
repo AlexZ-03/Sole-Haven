@@ -186,7 +186,7 @@ const generatePDF = async (res, orders, dateFilter, startDate, endDate) => {
     const stats = await calculateStats(startDate, endDate);
 
     const addHeader = (includeSummary) => {
-        doc.fontSize(16).text('Sales Report', { align: 'center' });
+        doc.fontSize(16).text('Sales Report - Sole Heaven IN', { align: 'center' });
         doc.moveDown();
 
         doc.fontSize(12).text(`Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`, { align: 'center' });
